@@ -3,7 +3,6 @@ import { Job, Payload } from './contracts/job.js'
 import { QueueDriver } from './contracts/queue_driver.js'
 import { MemoryQueueDriver } from './drivers/memory.js'
 import { PostgresQueueDriver } from './drivers/postgres.js'
-import { PendingDispatch } from './pending_dispatch.js'
 import type {
   QueueConfig,
   QueueConnectionConfig,
@@ -107,18 +106,6 @@ export class Queue {
     for (const [_, driver] of this.drivers) {
       await driver.unregister(job)
     }
-  }
-
-  public dispatch<T extends Job, P extends Payload<T>>(
-    job: T,
-    payload: P,
-  ): PendingDispatch<T, P> {
-    this.logger.trace(
-      { queue: job.options.queue, job: job.name },
-      'Creating pending dispatch',
-    )
-
-    return new PendingDispatch<T, P>(job, payload)
   }
 
   public async enqueue<T extends Job, P extends Payload<T>>(

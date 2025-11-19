@@ -33,8 +33,10 @@
     "copy:templates": "copyfiles \"stubs/**/*.stub\" build",
     "lint": "eslint .",
     "check": "tsc --noEmit",
-    "test": "tsx bin/test.ts",
-    "test:watch": "nodemon --watch src --watch tests --ext ts --exec \"npm run test\"",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "test:ui": "vitest --ui",
+    "test:coverage": "vitest run --coverage",
     "build": "tsup-node",
     "watch": "tsup --watch"
   },
@@ -46,13 +48,13 @@
   "peerDependenciesMeta": {},
   "devDependencies": {
     "@adonisjs/tsconfig": "^1.4.1",
-    "@japa/assert": "^4.1.1",
-    "@japa/runner": "^4.4.0",
     "@julr/utils": "^1.9.0",
     "@testcontainers/postgresql": "^11.8.1",
     "@trivago/prettier-plugin-sort-imports": "^6.0.0",
     "@types/node": "^24.10.0",
-    "dotenv": "^17.2.3",
+    "@vitest/coverage-v8": "^4.0.10",
+    "@vitest/ui": "^4.0.10",
+    "dotenv": "^16.6.1",
     "nodemon": "^3.1.11",
     "p-defer": "^4.0.1",
     "pino-pretty": "^13.1.2",
@@ -60,6 +62,7 @@
     "testcontainers": "^11.8.1",
     "tsup": "^8.5.0",
     "tsx": "^4.20.6",
-    "typescript": "^5.9.3"
+    "typescript": "^5.9.3",
+    "vitest": "^4.0.10"
   }
 }
