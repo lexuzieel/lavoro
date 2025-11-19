@@ -5,19 +5,9 @@
   "printWidth": 80,
   "trailingComma": "all",
   "proseWrap": "always",
-  "markdown": {
-    "tabWidth": 4
-  },
-  "plugins": [
-    "@trivago/prettier-plugin-sort-imports"
-  ],
-  "importOrderParserPlugins": [
-    "typescript",
-    "decorators"
-  ],
-  "importOrder": [
-    "^[^.]"
-  ],
+  "plugins": ["@trivago/prettier-plugin-sort-imports"],
+  "importOrderParserPlugins": ["typescript", "decorators"],
+  "importOrder": ["^[^.]"],
   "importOrderSeparation": true,
   "importOrderSortSpecifiers": true
 }

@@ -14,7 +14,10 @@ describe('Queue', () => {
       jobs: [DummyJob],
       connection: 'memory',
       connections: {
-        memory: { driver: 'memory', queues: { default: { concurrency: 1 } } },
+        memory: {
+          driver: 'memory',
+          queues: { default: { concurrency: 1 } },
+        },
       },
     })
     const queue = new Queue(config)

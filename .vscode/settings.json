@@ -1,7 +1,13 @@
 {
-    "coverage-gutters.coverageFileNames": [
-        "coverage/lcov.info"
-    ],
-    "coverage-gutters.showLineCoverage": true,
-    "coverage-gutters.showRulerCoverage": true
+  "coverage-gutters.coverageFileNames": ["coverage/lcov.info"],
+  "coverage-gutters.showLineCoverage": true,
+  "coverage-gutters.showRulerCoverage": true,
+  "editor.defaultFormatter": "esbenp.prettier-vscode",
+  "editor.formatOnSave": true,
+  "[json]": {
+    "editor.defaultFormatter": "esbenp.prettier-vscode"
+  },
+  "[jsonc]": {
+    "editor.defaultFormatter": "esbenp.prettier-vscode"
+  }
 }

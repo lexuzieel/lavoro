@@ -18,7 +18,10 @@ describe('PendingDispatch', () => {
       connections: {
         main: {
           driver: 'memory',
-          queues: { default: { concurrency: 1 }, other: { concurrency: 1 } },
+          queues: {
+            default: { concurrency: 1 },
+            other: { concurrency: 1 },
+          },
         },
       },
     })

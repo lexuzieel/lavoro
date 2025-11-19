@@ -29,9 +29,6 @@
     "#config/*": "./src/config/*.js"
   },
   "scripts": {
-    "clean": "del-cli build",
-    "copy:templates": "copyfiles \"stubs/**/*.stub\" build",
-    "lint": "eslint .",
     "check": "tsc --noEmit",
     "test": "vitest run",
     "test:watch": "vitest",

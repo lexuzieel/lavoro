@@ -1,7 +1,7 @@
-import { QueueDriver, QueueName } from '../contracts/queue_driver.js'
-
 import { Job, Payload } from '../contracts/job.js'
+import { QueueDriver, QueueName } from '../contracts/queue_driver.js'
 import { PostgresQueueConnectionConfig, WorkerOptions } from '../types.js'
+
 import { PgBoss } from 'pg-boss'
 
 export type PostgresConfig = {
@@ -92,7 +92,12 @@ export class PostgresQueueDriver extends QueueDriver {
             await jobInstance.handle(job.data)
 
             this.logger.trace(
-              { connection: this.connection, queue, job: name, id: job.id },
+              {
+                connection: this.connection,
+                queue,
+                job: name,
+                id: job.id,
+              },
               'Job completed',
             )
           }

@@ -1,5 +1,4 @@
 import { QueueDriver } from '../contracts/queue_driver.js'
-
 import { WorkerOptions } from '../types.js'
 
 export class MemoryQueueDriver extends QueueDriver {
