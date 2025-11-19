@@ -44,8 +44,8 @@
     "test:coverage": "vitest run --coverage",
     "build": "tsup-node",
     "watch": "tsup --watch",
-    "prepublish": "npm run check && npm run test && npm run build",
-    "release": "npm run prepublish && npm publish"
+    "prepublishOnly": "npm run check && npm run test && npm run build",
+    "postversion": "git push && git push --tags"
   },
   "peerDependencies": {
     "pg": "^8.16.3",
