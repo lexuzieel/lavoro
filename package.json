@@ -1,0 +1,65 @@
+{
+  "name": "lavoro",
+  "type": "module",
+  "version": "0.1.0",
+  "description": "",
+  "author": "Aleksei Ivanov <contact@aleksei.dev>",
+  "license": "MIT",
+  "keywords": [
+    "queue",
+    "background",
+    "worker",
+    "pg-boss",
+    "postgres"
+  ],
+  "exports": {
+    ".": {
+      "types": "./build/index.d.ts",
+      "import": "./build/index.js"
+    }
+  },
+  "main": "build/index.js",
+  "files": [
+    "build"
+  ],
+  "imports": {
+    "#services/*": "./src/services/*.js",
+    "#providers/*": "./src/providers/*.js",
+    "#tests/*": "./tests/*.js",
+    "#config/*": "./src/config/*.js"
+  },
+  "scripts": {
+    "clean": "del-cli build",
+    "copy:templates": "copyfiles \"stubs/**/*.stub\" build",
+    "lint": "eslint .",
+    "check": "tsc --noEmit",
+    "test": "tsx bin/test.ts",
+    "test:watch": "nodemon --watch src --watch tests --ext ts --exec \"npm run test\"",
+    "build": "tsup-node",
+    "watch": "tsup --watch"
+  },
+  "peerDependencies": {
+    "pg": "^8.16.3",
+    "pg-boss": "^12.2.0",
+    "pino": "^10.1.0"
+  },
+  "peerDependenciesMeta": {},
+  "devDependencies": {
+    "@adonisjs/tsconfig": "^1.4.1",
+    "@japa/assert": "^4.1.1",
+    "@japa/runner": "^4.4.0",
+    "@julr/utils": "^1.9.0",
+    "@testcontainers/postgresql": "^11.8.1",
+    "@trivago/prettier-plugin-sort-imports": "^6.0.0",
+    "@types/node": "^24.10.0",
+    "dotenv": "^17.2.3",
+    "nodemon": "^3.1.11",
+    "p-defer": "^4.0.1",
+    "pino-pretty": "^13.1.2",
+    "prettier": "^3.6.2",
+    "testcontainers": "^11.8.1",
+    "tsup": "^8.5.0",
+    "tsx": "^4.20.6",
+    "typescript": "^5.9.3"
+  }
+}
