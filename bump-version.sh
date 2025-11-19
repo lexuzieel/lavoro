@@ -25,6 +25,6 @@ fi
 
 echo ""
 echo "✅ Version bumped successfully!"
-echo "🏷️ Git tag created and pushed"
+echo "🏷️  Git tag created and pushed"
 echo "🚀 GitHub Actions will automatically publish to npm"
 
