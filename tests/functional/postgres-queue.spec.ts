@@ -12,20 +12,6 @@ class TestJob extends Job {
   }
 }
 
-describe('Queue service (PostgreSQL)', () => {
-  const ctx = new TestContext()
-
-  ctx.setup([TestJob], 'postgres', {
-    worker: true,
-  })
-
-  test('should be able to dispatch a job onto default connection and queue', async () => {
-    acquireMutex('test-job')
-    await TestJob.dispatch({ arg1: 'hello', arg2: 1 })
-    await waitForMutex('test-job')
-  })
-})
-
 describe('Queue service with disabled worker (PostgreSQL)', () => {
   const ctx = new TestContext()
 
@@ -41,5 +27,19 @@ describe('Queue service with disabled worker (PostgreSQL)', () => {
     await expect(waitForMutex('test-job', 3000)).rejects.toThrow(
       "Mutex 'test-job' timeout",
     )
+  })
+})
+
+describe('Queue service (PostgreSQL)', () => {
+  const ctx = new TestContext()
+
+  ctx.setup([TestJob], 'postgres', {
+    worker: true,
+  })
+
+  test('should be able to dispatch a job onto default connection and queue', async () => {
+    acquireMutex('test-job')
+    await TestJob.dispatch({ arg1: 'hello', arg2: 1 })
+    await waitForMutex('test-job')
   })
 })
