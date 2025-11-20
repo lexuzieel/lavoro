@@ -141,6 +141,13 @@ export class TestContext {
   }
 }
 
+declare module '../../src/queue/types.js' {
+  export interface QueueConnections {
+    main: never
+    alternative: never
+  }
+}
+
 declare module '../../src/queue/contracts/queue_driver.js' {
   export interface QueuesList
     extends Record<'default' | 'custom-queue' | 'disabled-queue', never> {}

@@ -31,22 +31,46 @@ describe('PendingDispatch', () => {
 
   test('onConnection updates connection', () => {
     const pending = TestJob.dispatch({ test: 'hello' }).onConnection(
-      'my-connection',
+      'alternative',
     )
     expect(pending).toBeDefined()
 
     // Get private 'job' property
     const pendingJob = (pending as any).job as Job
-    expect(pendingJob.options.connection).toBe('my-connection')
+    expect(pendingJob.options.connection).toBe('alternative')
   })
 
   test('onQueue updates queue', () => {
-    const pending = TestJob.dispatch({ test: 'hello' }).onQueue('my-queue')
+    const pending = TestJob.dispatch({ test: 'hello' })
+      .onConnection('main')
+      .onQueue('custom-queue')
     expect(pending).toBeDefined()
 
     // Get private 'job' property
     const pendingJob = (pending as any).job as Job
-    expect(pendingJob.options.queue).toBe('my-queue')
+    expect(pendingJob.options.queue).toBe('custom-queue')
+  })
+
+  test('onQueue is type-safe based on connection', () => {
+    // This should work: 'main' connection has 'custom-queue'
+    const pending1 = TestJob.dispatch({ test: 'hello' })
+      .onConnection('main')
+      .onQueue('custom-queue')
+    expect(pending1).toBeDefined()
+
+    // This should work: 'alternative' connection has 'first-queue'
+    const pending2 = TestJob.dispatch({ test: 'hello' })
+      .onConnection('alternative')
+      .onQueue('first-queue')
+    expect(pending2).toBeDefined()
+
+    // This would fail at compile time (uncomment to test):
+    // const pending3 = TestJob.dispatch({ test: 'hello' })
+    //   .onConnection('alternative')
+    //   .onQueue('custom-queue')
+
+    // Error: Argument of type '"custom-queue"' is not assignable
+    // to parameter of type 'QueueNameForConnection<"alternative">'.
   })
 
   test('throws error when queue service resolver is not set', async () => {

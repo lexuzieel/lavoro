@@ -12,9 +12,9 @@ describe('Queue', () => {
   test('throws error when enqueueing to non-existent connection', async () => {
     const config = defineConfig({
       jobs: [DummyJob],
-      connection: 'memory',
+      connection: 'main',
       connections: {
-        memory: {
+        main: {
           driver: 'memory',
           queues: { default: { concurrency: 1 } },
         },
