@@ -1,6 +1,7 @@
 import {
   Logger,
   Queue,
+  QueueConfig,
   QueueConnectionConfig,
   QueueDriverType,
 } from '../../src/index.js'
@@ -48,9 +49,9 @@ export class TestContext {
         return {
           driver: 'postgres',
           queues: {
-            default: { work: true },
-            'test-queue': { work: true, concurrency: 1 },
-            'disabled-queue': { work: false },
+            default: {},
+            'test-queue': { concurrency: 2 },
+            'disabled-queue': { concurrency: 0 },
           },
           config: {
             host: this.postgresContainer.getHost(),
@@ -65,13 +66,18 @@ export class TestContext {
     }
   }
 
-  async setupQueue(jobs: (new () => Job)[] = [], driver: QueueDriverType) {
+  async setupQueue(
+    jobs: (new () => Job)[] = [],
+    driver: QueueDriverType,
+    config?: Partial<QueueConfig>,
+  ) {
     const queueConfig = defineConfig({
       jobs,
       connection: 'main',
       connections: {
         main: await this.getConnectionConfig(driver),
       },
+      ...(config || {}),
     })
 
     this.queue = new Queue({ ...queueConfig, logger: new Logger(logger) })
@@ -97,9 +103,13 @@ export class TestContext {
   /**
    * Setup lifecycle hooks for vitest
    */
-  setup(jobs: (new () => Job)[] = [], driver: QueueDriverType) {
+  setup(
+    jobs: (new () => Job)[] = [],
+    driver: QueueDriverType,
+    config?: Partial<QueueConfig>,
+  ) {
     beforeAll(async () => {
-      await this.setupQueue(jobs, driver)
+      await this.setupQueue(jobs, driver, config)
     })
 
     afterAll(async () => {

@@ -37,10 +37,14 @@ export class Queue {
 
     switch (config.driver) {
       case 'memory':
-        driver = new MemoryQueueDriver(config.queues)
+        driver = new MemoryQueueDriver(this.config, config.queues)
         break
       case 'postgres':
-        driver = new PostgresQueueDriver(config.config, config.queues)
+        driver = new PostgresQueueDriver(
+          this.config,
+          config.queues,
+          config.config,
+        )
         break
       default:
         // TypeScript exhaustiveness check

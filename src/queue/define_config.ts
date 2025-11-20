@@ -1,5 +1,9 @@
-import { Job } from './contracts/job.js'
-import type { QueueConnectionsList } from './types.js'
+import type { QueueConfig, QueueConnectionsList } from './types.js'
+
+type QueueConfigWithConnections<Connections, Connection> = QueueConfig & {
+  connection: Connection
+  connections: Connections
+}
 
 /**
  * Define config for queue service
@@ -7,14 +11,8 @@ import type { QueueConnectionsList } from './types.js'
 export function defineConfig<
   Connections extends QueueConnectionsList,
   Connection extends keyof Connections = keyof Connections,
->(config: {
-  jobs: (new () => Job)[]
-  connection: Connection
-  connections: Connections
-}): {
-  jobs: (new () => Job)[]
-  connection: Connection
-  connections: Connections
-} {
+>(
+  config: QueueConfigWithConnections<Connections, Connection>,
+): QueueConfigWithConnections<Connections, Connection> {
   return config
 }

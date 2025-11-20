@@ -1,6 +1,10 @@
 import { Job, Payload } from '../contracts/job.js'
 import { QueueDriver, QueueName } from '../contracts/queue_driver.js'
-import { PostgresQueueConnectionConfig, WorkerOptions } from '../types.js'
+import {
+  PostgresQueueConnectionConfig,
+  QueueConfig,
+  WorkerOptions,
+} from '../types.js'
 
 import { PgBoss } from 'pg-boss'
 
@@ -16,10 +20,11 @@ export class PostgresQueueDriver extends QueueDriver {
   private boss: PgBoss
 
   constructor(
-    config: PostgresQueueConnectionConfig['config'],
+    queueConfig: QueueConfig,
     options: Record<QueueName, WorkerOptions>,
+    config: PostgresQueueConnectionConfig['config'],
   ) {
-    super(options)
+    super(queueConfig, options)
 
     this.boss = new PgBoss({
       connectionString: `postgresql://${config.user}:${config.password}@${config.host}:${config.port}/${config.database}`,
@@ -34,7 +39,7 @@ export class PostgresQueueDriver extends QueueDriver {
     fullyQualifiedJobName: string,
     options: WorkerOptions,
   ): Promise<void> {
-    const { concurrency = 1, work = true } = options
+    const { concurrency = 1 } = options
 
     const { queue, name } = Job.parseName(fullyQualifiedJobName)
 
@@ -48,7 +53,7 @@ export class PostgresQueueDriver extends QueueDriver {
       // deleteAfterSeconds: 0, // Default: 7 days. How long a job should be retained in the database after it's completed.
     })
 
-    if (!work || concurrency === 0) {
+    if (!this.config?.worker || concurrency === 0) {
       this.logger.trace(
         { connection: this.connection, queue, job: name },
         'Queue worker is disabled - skipping',

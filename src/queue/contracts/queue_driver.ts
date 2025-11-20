@@ -1,5 +1,5 @@
 import { Logger, createDefaultLogger } from '../../logger.js'
-import { QueueConnectionName, WorkerOptions } from '../types.js'
+import { QueueConfig, QueueConnectionName, WorkerOptions } from '../types.js'
 import { Job, Payload } from './job.js'
 
 /**
@@ -77,12 +77,15 @@ export abstract class QueueDriver {
 
   protected registeredJobs: Map<string, new () => Job> = new Map()
 
+  protected config: QueueConfig
+
   protected options: Record<QueueName, WorkerOptions>
 
   public connection: QueueConnectionName | undefined
 
-  constructor(options: Record<QueueName, WorkerOptions>) {
+  constructor(config: QueueConfig, options: Record<QueueName, WorkerOptions>) {
     this.logger = createDefaultLogger('queue')
+    this.config = config
     this.options = options
   }
 

@@ -1,7 +1,6 @@
 import { Job } from './contracts/job.js'
 
 export type WorkerOptions = {
-  work?: boolean
   concurrency?: number
 }
 
@@ -94,6 +93,7 @@ export type QueueConnectionName = keyof QueueConnections extends never
  */
 export type QueueConfig = {
   jobs: (new () => Job)[]
+  worker?: boolean
   connection: QueueConnectionName
   connections: QueueConnectionsList
 }
