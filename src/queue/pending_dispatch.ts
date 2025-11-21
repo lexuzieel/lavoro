@@ -58,7 +58,7 @@ export class PendingDispatch<
     onfulfilled?: ((value: void) => TResult1 | PromiseLike<TResult1>) | null,
     onrejected?: ((reason: any) => TResult2 | PromiseLike<TResult2>) | null,
   ): Promise<TResult1 | TResult2> {
-    // When await is called, actually dispatch the job
+    // When await is called, actually execte pending chain.
     return this.execute().then(onfulfilled, onrejected)
   }
 }
