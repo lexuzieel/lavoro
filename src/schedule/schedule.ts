@@ -1,3 +1,5 @@
+import { Job, Payload } from '../queue/contracts/job.js'
+import { PendingJobSchedule } from './pending_job_schedule.js'
 import { PendingSchedule } from './pending_schedule.js'
 import { ScheduleRegistry } from './schedule_registry.js'
 import { MaybePromise } from './types.js'
@@ -88,5 +90,28 @@ export class Schedule {
    */
   public static call(name: string, cb: () => MaybePromise<void>) {
     return new PendingSchedule(name, cb, this.verrouInstance)
+  }
+
+  /**
+   * Schedule a job to run at specified intervals.
+   *
+   * You can specify the connection and queue to use for the job
+   * the same way you would dispatch a job.
+   *
+   * @param job - The job class to schedule
+   * @param payload - The payload to pass to the job
+   *
+   * @example
+   * Schedule.job(TestJob, { arg1: 'hello', arg2: 1 }).every('minute')
+   * Schedule.job(TestJob, { arg1: 'hello', arg2: 1 })
+   *   .onConnection('main')
+   *   .onQueue('default')
+   *   .every('minute')
+   */
+  public static job<T extends Job, P extends Payload<T>>(
+    job: new () => T,
+    payload: P,
+  ): PendingJobSchedule<T, P> {
+    return new PendingJobSchedule<T, P>(new job(), payload, this.getVerrou())
   }
 }

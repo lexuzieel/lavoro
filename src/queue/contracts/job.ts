@@ -2,6 +2,8 @@ import { PendingDispatch } from '../pending_dispatch.js'
 import { Queue } from '../queue.js'
 import { QueueConnectionName } from '../types.js'
 
+import { randomUUID } from 'node:crypto'
+
 export type Payload<T extends Job> = T extends Job<infer P> ? P : unknown
 
 export type Options = {
@@ -12,7 +14,7 @@ export type Options = {
 }
 
 export abstract class Job<P = unknown> {
-  private _id?: string
+  private _id: string = randomUUID()
 
   public options: Options = {
     retries: 3,
@@ -48,11 +50,11 @@ export abstract class Job<P = unknown> {
     return this.constructor.name
   }
 
-  public get id(): string | undefined {
+  public get id(): string {
     return this._id
   }
 
-  public set id(id: string | undefined) {
+  public set id(id: string) {
     this._id = id
   }
 

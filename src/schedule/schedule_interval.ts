@@ -60,7 +60,7 @@ export type ScheduleIntervalTime = `${Hour}:${Minute}`
 export function parseTime(time: ScheduleIntervalTime): [number, number] {
   const [hour, minute] = time.split(':')
 
-  if (!hour || !minute) {
+  if (!hour || !minute || hour.length !== 2 || minute.length !== 2) {
     throw new Error('Invalid time format')
   }
 

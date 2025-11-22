@@ -20,12 +20,12 @@ export const getDistributedLockKey = (name: string) => {
 }
 
 export class PendingSchedule {
-  private cronPattern?: string
+  protected cronPattern?: string
 
-  private interval: ScheduleInterval = 'day'
-  private intervalOptions?: IntervalCronOptions
+  protected interval: ScheduleInterval = 'day'
+  protected intervalOptions?: IntervalCronOptions
 
-  private distributedLockOptions: {
+  protected distributedLockOptions: {
     /**
      * The lock key is based on the task name to ensure only one instance runs
      *
@@ -43,9 +43,9 @@ export class PendingSchedule {
   }
 
   constructor(
-    private name: string,
-    private cb: () => MaybePromise<void>,
-    private verrou: Verrou<any>,
+    protected name: string,
+    protected cb: () => MaybePromise<void>,
+    protected verrou: Verrou<any>,
   ) {}
 
   /**
@@ -134,7 +134,7 @@ export class PendingSchedule {
     return this
   }
 
-  private async execute(): Promise<void> {
+  protected async execute(): Promise<void> {
     if (!this.cronPattern) {
       throw new Error(
         'No schedule pattern defined. To schedule a task, set interval explicitly.',

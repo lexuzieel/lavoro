@@ -1,6 +1,5 @@
 import { Job, Payload } from './contracts/job.js'
 import { QueueName, QueueNameForConnection } from './contracts/queue_driver.js'
-import { Queue } from './queue.js'
 import { DefaultConnection, QueueConnectionName } from './types.js'
 
 export class PendingDispatch<
@@ -13,8 +12,8 @@ export class PendingDispatch<
     : QueueConnectionName,
 > {
   constructor(
-    private job: T,
-    private payload: P,
+    protected job: T,
+    protected payload: P,
   ) {}
 
   public onConnection<NewC extends QueueConnectionName>(
@@ -22,24 +21,24 @@ export class PendingDispatch<
   ): PendingDispatch<T, P, NewC> {
     this.job.options.connection = connection
 
-    return this as any
+    return this as unknown as PendingDispatch<T, P, NewC>
   }
 
-  public onQueue(queue: QueueNameForConnection<C>): this {
+  public onQueue(queue: QueueNameForConnection<C>) {
     this.job.options.queue = queue as QueueName
 
     return this
   }
 
-  public withQueueServiceResolver(
-    queueServiceResolver: () => Promise<Queue>,
-  ): this {
-    this.job.setQueueServiceResolver(queueServiceResolver)
+  // public withQueueServiceResolver(
+  //   queueServiceResolver: () => Promise<Queue>,
+  // ): this {
+  //   this.job.setQueueServiceResolver(queueServiceResolver)
 
-    return this
-  }
+  //   return this
+  // }
 
-  private async execute(): Promise<void> {
+  protected async execute(): Promise<void> {
     if (!this.job.getQueueServiceResolver) {
       throw new Error(
         'Queue service resolver is not set.\nDid you forget to call Job.setDefaultQueueServiceResolver()?',

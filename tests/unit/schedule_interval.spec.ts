@@ -1,7 +1,9 @@
 import {
   IntervalCronOptions,
   ScheduleInterval,
+  ScheduleIntervalTime,
   intervalToCron,
+  parseTime,
 } from '../../src/schedule/schedule_interval.js'
 
 import { CronExpressionOptions, CronExpressionParser } from 'cron-parser'
@@ -40,6 +42,25 @@ const check = (
 }
 
 describe('ScheduleInterval', () => {
+  test('parseTime', async () => {
+    expect(parseTime('12:00')).toEqual([12, 0])
+    expect(parseTime('00:00')).toEqual([0, 0])
+    expect(parseTime('00:01')).toEqual([0, 1])
+    expect(parseTime('01:00')).toEqual([1, 0])
+    expect(parseTime('01:01')).toEqual([1, 1])
+    expect(parseTime('12:34')).toEqual([12, 34])
+    expect(parseTime('23:59')).toEqual([23, 59])
+    expect(parseTime('00:00:00' as ScheduleIntervalTime)).toEqual([0, 0])
+    expect(parseTime('12:00:00' as ScheduleIntervalTime)).toEqual([12, 0])
+    expect(parseTime('12:12:99' as ScheduleIntervalTime)).toEqual([12, 12])
+    expect(() => parseTime('0:0' as ScheduleIntervalTime)).toThrowError(
+      'Invalid time format',
+    )
+    expect(() => parseTime('0' as ScheduleIntervalTime)).toThrowError(
+      'Invalid time format',
+    )
+  })
+
   test('every second', async () => {
     check('second', '2025-01-01T00:00:01Z')
   })

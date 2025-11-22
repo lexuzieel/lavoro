@@ -1,4 +1,5 @@
 import { Logger, createDefaultLogger } from '../logger.js'
+import { Schedule } from '../schedule/schedule.js'
 import { Job, Payload } from './contracts/job.js'
 import { QueueDriver } from './contracts/queue_driver.js'
 import { MemoryQueueDriver } from './drivers/memory.js'
@@ -13,6 +14,7 @@ export class Queue {
   private drivers: Map<QueueConnectionName, QueueDriver> = new Map()
   private started: boolean = false
   private logger: Logger
+  private scheduledJobs: Set<string> = new Set()
 
   constructor(private config: QueueConfig & { logger?: Logger }) {
     this.logger = config?.logger || createDefaultLogger('queue')
@@ -86,6 +88,18 @@ export class Queue {
       return
     }
 
+    this.logger.trace(
+      { count: this.scheduledJobs.size },
+      'Cleared scheduled jobs for the queue',
+    )
+
+    // Clear all scheduled jobs registered with this Queue instance
+    for (const id of this.scheduledJobs) {
+      Schedule.clear(id)
+    }
+
+    this.scheduledJobs.clear()
+
     for (const job of this.config.jobs) {
       await this.unregister(job)
     }
@@ -139,5 +153,13 @@ export class Queue {
     }
 
     await driver.enqueue(job, payload)
+  }
+
+  /**
+   * Register a scheduled job ID with this Queue instance.
+   * This allows the Queue to clean up scheduled jobs when it stops.
+   */
+  public registerScheduledJob(id: string): void {
+    this.scheduledJobs.add(id)
   }
 }
