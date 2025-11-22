@@ -1,7 +1,10 @@
 import {
   IntervalCronOptions,
   ScheduleInterval,
+  ScheduleIntervalDayOfWeek,
+  ScheduleIntervalTime,
   intervalToCron,
+  parseTime,
 } from './schedule_interval.js'
 import { ScheduleRegistry } from './schedule_registry.js'
 import { MaybePromise } from './types.js'
@@ -18,6 +21,9 @@ export const getDistributedLockKey = (name: string) => {
 
 export class PendingSchedule {
   private cronPattern?: string
+
+  private interval: ScheduleInterval = 'day'
+  private intervalOptions?: IntervalCronOptions
 
   private distributedLockOptions: {
     /**
@@ -75,7 +81,56 @@ export class PendingSchedule {
     interval: ScheduleInterval,
     options?: IntervalCronOptions,
   ): this {
+    this.interval = interval
+    this.intervalOptions = options
     this.cronPattern = intervalToCron(interval, options)
+    return this
+  }
+
+  public on(dayOfWeek: ScheduleIntervalDayOfWeek): this {
+    // .on() only makes sense for intervals larger than 'day'
+    const valid: ScheduleInterval[] = [
+      //
+      'week',
+      'month',
+    ]
+
+    if (!valid.includes(this.interval)) {
+      throw new Error(
+        `.on() can only be used for weekly intervals or larger. Current interval: '${this.interval}'`,
+      )
+    }
+
+    this.intervalOptions = { ...(this.intervalOptions ?? {}), dayOfWeek }
+    this.cronPattern = intervalToCron(this.interval, this.intervalOptions)
+    return this
+  }
+
+  public at(time: ScheduleIntervalTime): this {
+    // .at() only makes sense for intervals larger than 'hour'
+    const valid: ScheduleInterval[] = [
+      'day',
+      'week',
+      'sunday',
+      'monday',
+      'tuesday',
+      'wednesday',
+      'thursday',
+      'friday',
+      'saturday',
+      'month',
+      'last day of month',
+    ]
+
+    if (!valid.includes(this.interval)) {
+      throw new Error(
+        `.at() can only be used for daily intervals or larger. Current interval: '${this.interval}'`,
+      )
+    }
+
+    const [hour, minute] = parseTime(time)
+    this.intervalOptions = { ...(this.intervalOptions ?? {}), hour, minute }
+    this.cronPattern = intervalToCron(this.interval, this.intervalOptions)
     return this
   }
 

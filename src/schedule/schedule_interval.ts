@@ -52,6 +52,21 @@ export type ScheduleIntervalDayOfWeek =
   | 'friday'
   | 'saturday'
 
+type Hour = `${0 | 1 | 2}${0 | 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9}`
+type Minute = `${0 | 1 | 2 | 3 | 4 | 5}${0 | 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9}`
+
+export type ScheduleIntervalTime = `${Hour}:${Minute}`
+
+export function parseTime(time: ScheduleIntervalTime): [number, number] {
+  const [hour, minute] = time.split(':')
+
+  if (!hour || !minute) {
+    throw new Error('Invalid time format')
+  }
+
+  return [Number(hour), Number(minute)]
+}
+
 export interface IntervalCronOptions {
   /** Minute to run. Default: 0 */
   minute?: number
@@ -151,7 +166,7 @@ export function intervalToCron(
     friday: `${minute} ${hour} * * 5`,
     saturday: `${minute} ${hour} * * 6`,
 
-    month: `${minute} ${hour} ${dayOfMonth} * *`,
+    month: `${minute} ${hour} ${dayOfWeek ? '*' : dayOfMonth} * ${dayOfWeek ? dayOfWeekNumber + '#1' : '*'}`,
     'last day of month': `${minute} ${hour} L * *`,
 
     // quarter: `${minute} ${hour} ${dayOfWeek ? '*' : dayOfMonth} */3 ${dayOfWeek ? dayOfWeekNumber : '*'}`,
