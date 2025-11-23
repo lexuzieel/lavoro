@@ -135,5 +135,7 @@ describe('Schedule', () => {
 
     // Should run at least 3 times since we are overlapping
     expect(callCount).toBeGreaterThanOrEqual(3)
+
+    Schedule.clear('test-task')
   })
 })
