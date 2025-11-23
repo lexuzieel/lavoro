@@ -179,7 +179,8 @@ export class PendingSchedule {
       new Cron(this.cronPattern, async () => {
         // If overlapping is allowed, we can call the callback right away.
         if (this.distributedLockOptions.overlap) {
-          return await this.cb()
+          await this.cb()
+          return
         }
 
         // First, we create a distributed lock based on the task name,
