@@ -1,3 +1,4 @@
+import { MaybePromise } from '../types.js'
 import {
   IntervalCronOptions,
   ScheduleInterval,
@@ -7,9 +8,9 @@ import {
   parseTime,
 } from './schedule_interval.js'
 import { ScheduleRegistry } from './schedule_registry.js'
-import { MaybePromise } from './types.js'
 
 import type { LockFactory } from '@verrou/core'
+import type { SerializedLock } from '@verrou/core/types'
 import { Duration } from '@verrou/core/types'
 import { Cron } from 'croner'
 import { createHash } from 'node:crypto'
@@ -41,16 +42,21 @@ export class PendingSchedule {
      * Whether to allow overlapping executions of the same task
      */
     overlap: boolean
+    /**
+     * Whether to hand off the lock to the queue worker
+     */
+    handOff: boolean
   } = {
     key: getDistributedLockKey,
-    ttl: '10s',
+    ttl: '1m', // TODO: Decide on a default TTL
     overlap: false,
+    handOff: false,
   }
 
   constructor(
     protected name: string,
-    protected cb: () => MaybePromise<void>,
-    protected lockServiceResolver: () => LockFactory,
+    protected cb: (serializedLock?: SerializedLock) => MaybePromise<void>,
+    protected lockProviderResolver: () => LockFactory,
   ) {}
 
   /**
@@ -188,32 +194,48 @@ export class PendingSchedule {
         const key = this.distributedLockOptions.key(this.name)
         const ttl = this.distributedLockOptions.ttl
 
-        // Resolve lock service instance at execution time
-        const lockService = this.lockServiceResolver()
-        const lock = lockService.createLock(key, ttl)
+        // Resolve lock provider instance and create the lock.
+        const lockProvider = this.lockProviderResolver()
+        const lock = lockProvider.createLock(key, ttl)
 
+        // If the lock is already locked, we skip the execution.
+        // if (await lock.isLocked()) {
+        //   return
+        // }
+
+        const acquired = await lock.acquireImmediately()
+
+        console.log({
+          'acquired in scheduler': acquired,
+          lock: lock.serialize(),
+        })
+
+        if (!acquired) {
+          return
+        }
+
+        // If the lock was acquired, we run the task,
+        // otherwise just skip it and do nothing.
         try {
-          // Before running the task, we try to acquire the lock.
-          const acquired = await lock.acquire()
-
-          // If the lock was acquired, we run
-          // the task and always release the lock.
-          if (acquired) {
-            try {
-              await this.cb()
-            } finally {
-              await lock.release()
-            }
-          }
-
-          // If the lock wasn't acquired, it means another
-          // instance is running this task, so we skip it.
-        } catch (error) {
-          try {
+          // If the lock is marked to be handed off to the queue
+          // worker, we serialize and pass it to the callback.
+          // Otherwise we just run the task and then release
+          // the lock immediately.
+          if (this.distributedLockOptions.handOff) {
+            await this.cb(lock.serialize())
+            // await lock.release()
+          } else {
+            await this.cb()
             await lock.release()
-          } finally {
-            throw error
           }
+        } catch (error) {
+          // console.log(error)
+          // If the task callback failed, we release
+          // the lock and re-throw the error.
+          await lock.release()
+          throw error
+        } finally {
+          // await lock.release()
         }
       }),
     )

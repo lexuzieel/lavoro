@@ -200,7 +200,7 @@ export abstract class QueueDriver {
   }
 
   /**
-   * Create a lock provider instance for this driver.
+   * Create a lock factory instance for this driver.
    *
    * Each driver implementation should return a
    * [Verrou LockFactory instance](https://verrou.dev/docs/quick-setup#lockfactory-api)
@@ -211,12 +211,12 @@ export abstract class QueueDriver {
   public abstract createLockProvider(): LockFactory
 
   /**
-   * Clean up resources associated with a lock provider created by this driver.
+   * Clean up resources associated with a lock factory created by this driver.
    * This is called when the queue is stopped to ensure proper resource cleanup.
    *
-   * @param lockProvider - The lock provider instance to clean up
+   * @param lockFactory - The lock factory instance to clean up
    */
-  public async destroyLockProvider(_lockProvider: LockFactory): Promise<void> {
+  public async destroyLockProvider(_lockFactory: LockFactory): Promise<void> {
     // Default implementation does nothing
     // Drivers that need cleanup (e.g., Postgres with Knex) should override this
   }

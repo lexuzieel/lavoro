@@ -6,8 +6,9 @@ import {
   WorkerOptions,
 } from '../types.js'
 
-import { LockFactory } from '@verrou/core'
+import { Lock, LockFactory } from '@verrou/core'
 import { knexStore } from '@verrou/core/drivers/knex'
+import type { SerializedLock } from '@verrou/core/types'
 import knex from 'knex'
 import { PgBoss } from 'pg-boss'
 
@@ -22,8 +23,9 @@ export type PostgresConfig = {
 export class PostgresQueueDriver extends QueueDriver {
   private boss: PgBoss
   private postgresConfig: PostgresQueueConnectionConfig['config']
-  private lockProviderKnexInstance?: ReturnType<typeof knex>
-  private lockProviderTableName: string = 'lavoro_locks'
+  private lockFactory?: LockFactory
+  private lockKnexInstance?: ReturnType<typeof knex>
+  private lockTableName: string = 'lavoro_locks'
 
   constructor(
     queueConfig: QueueConfig,
@@ -51,21 +53,23 @@ export class PostgresQueueDriver extends QueueDriver {
       },
     })
 
-    this.lockProviderKnexInstance = knexInstance
+    this.lockKnexInstance = knexInstance
 
-    return new LockFactory(
+    this.lockFactory = new LockFactory(
       knexStore({
-        connection: knexInstance,
+        connection: this.lockKnexInstance,
         autoCreateTable: true,
-        tableName: this.lockProviderTableName,
+        tableName: this.lockTableName,
       }).factory(),
     )
+
+    return this.lockFactory
   }
 
-  public async destroyLockProvider(_lockProvider: LockFactory): Promise<void> {
-    if (this.lockProviderKnexInstance) {
-      await this.lockProviderKnexInstance.destroy()
-      this.lockProviderKnexInstance = undefined
+  public async destroyLockProvider(): Promise<void> {
+    if (this.lockKnexInstance) {
+      await this.lockKnexInstance.destroy()
+      this.lockKnexInstance = undefined
     }
   }
 
@@ -136,7 +140,69 @@ export class PostgresQueueDriver extends QueueDriver {
             jobInstance.queue = queue
             jobInstance.id = job.id
 
-            await jobInstance.handle(job.data)
+            // TODO: Make this pretty
+
+            // Extract lock data from payload if present (scheduled jobs)
+            const serializedLock = (job.data as any)?._lock as
+              | SerializedLock
+              | undefined
+
+            this.logger.debug(
+              {
+                connection: this.connection,
+                queue,
+                job: name,
+                id: job.id,
+                hasLock: !!serializedLock,
+              },
+              'Processing job',
+            )
+
+            // Handle lock for scheduled jobs
+            let restoredLock: Lock | undefined
+
+            if (
+              serializedLock !== undefined &&
+              this.lockFactory !== undefined
+            ) {
+              try {
+                restoredLock = this.lockFactory.restoreLock(serializedLock)
+                // await restoredLock.acquire()
+                console.log({
+                  'acquired in job': await restoredLock.acquireImmediately(),
+                  lock: restoredLock.serialize(),
+                })
+                this.logger.trace(
+                  { job: name, id: job.id, lock: serializedLock },
+                  'Restored lock from scheduler',
+                )
+              } catch (error) {
+                this.logger.warn(
+                  { job: name, id: job.id, error },
+                  'Failed to restore lock',
+                )
+              }
+            }
+
+            try {
+              await jobInstance.handle(job.data)
+            } finally {
+              // Release the lock after job completes
+              if (restoredLock) {
+                try {
+                  await restoredLock.release()
+                  this.logger.trace(
+                    { job: name, id: job.id, lock: restoredLock.serialize() },
+                    'Released lock for scheduled job',
+                  )
+                } catch (error) {
+                  this.logger.warn(
+                    { job: name, id: job.id, error },
+                    'Failed to release lock',
+                  )
+                }
+              }
+            }
 
             this.logger.trace(
               {
@@ -193,7 +259,17 @@ export class PostgresQueueDriver extends QueueDriver {
   }
 
   public async stop(): Promise<void> {
+    this.logger.trace(
+      { connection: this.connection, driver: 'postgres' },
+      'Waiting for pg-boss to gracefully stop...',
+    )
+
     await this.boss.stop()
+
+    this.logger.trace(
+      { connection: this.connection, driver: 'postgres' },
+      'Pg-boss stopped',
+    )
 
     await super.stop()
 

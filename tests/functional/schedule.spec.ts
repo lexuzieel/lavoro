@@ -79,63 +79,43 @@ describe('Schedule', () => {
     expect(duration).toBeLessThan(4000)
   })
 
-  test('should not overlap unless explicitly allowed', async () => {
+  test('should not overlap by default', async () => {
+    Schedule.clear()
     let callCount = 0
 
-    /**
-     * Long tasks should not overlap
-     */
     await Schedule.call('test-task', async () => {
-      await new Promise((resolve) => setTimeout(resolve, 3000))
+      await new Promise((resolve) => setTimeout(resolve, 4000))
       callCount++
     }).every('second')
 
-    while (callCount < 1) {
-      await new Promise((resolve) => setTimeout(resolve, 100))
-    }
+    // Wait for 6 seconds
+    await new Promise((resolve) => setTimeout(resolve, 6 * 1000 + 100))
 
-    // Should run only once since we are not overlapping
+    Schedule.clear()
+
+    // Each task takes 4 seconds, so after
+    // 6 seconds, we should have had 1 call.
     expect(callCount).toBe(1)
+  })
 
-    /**
-     * Short tasks also do not overlap, but since they
-     * take less than 1 second this is not noticeable.
-     */
-    Schedule.clear('test-task')
-    callCount = 0
+  test('should overlap if explicitly allowed', async () => {
+    Schedule.clear()
+    let callCount = 0
 
     await Schedule.call('test-task', async () => {
-      callCount++
-    }).every('second')
-
-    while (callCount < 3) {
-      await new Promise((resolve) => setTimeout(resolve, 100))
-    }
-
-    // Should run at least 3 times since we are not
-    // overlapping but the task takes less than 1 second
-    expect(callCount).toBeGreaterThanOrEqual(3)
-
-    /**
-     * Long tasks can be forced to overlap
-     */
-    Schedule.clear('test-task')
-    callCount = 0
-
-    await Schedule.call('test-task', async () => {
-      await new Promise((resolve) => setTimeout(resolve, 3000))
+      await new Promise((resolve) => setTimeout(resolve, 4000))
       callCount++
     })
       .every('second')
       .overlapping()
 
-    while (callCount < 3) {
-      await new Promise((resolve) => setTimeout(resolve, 100))
-    }
+    // Wait for 6 seconds
+    await new Promise((resolve) => setTimeout(resolve, 6 * 1000 + 100))
 
-    // Should run at least 3 times since we are overlapping
-    expect(callCount).toBeGreaterThanOrEqual(3)
+    Schedule.clear()
 
-    Schedule.clear('test-task')
+    // Each task takes 4 seconds, so after
+    // 6 seconds, we should have had 2 calls.
+    expect(callCount).toBe(2)
   })
 })

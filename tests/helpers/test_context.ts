@@ -82,13 +82,7 @@ export class TestContext {
               'custom-queue': { concurrency: 2 },
               'disabled-queue': { concurrency: 0 },
             },
-            config: {
-              host: this.postgresContainer.getHost(),
-              port: this.postgresContainer.getPort(),
-              user: this.postgresContainer.getUsername(),
-              password: this.postgresContainer.getPassword(),
-              database: this.postgresContainer.getDatabase(),
-            },
+            config: this.getPostgresConfig(),
           },
           alternative: {
             driver: 'postgres',
@@ -96,13 +90,7 @@ export class TestContext {
               'first-queue': {},
               'second-queue': {},
             },
-            config: {
-              host: this.postgresContainer.getHost(),
-              port: this.postgresContainer.getPort(),
-              user: this.postgresContainer.getUsername(),
-              password: this.postgresContainer.getPassword(),
-              database: this.postgresContainer.getDatabase(),
-            },
+            config: this.getPostgresConfig(),
           },
         }
       default:
@@ -126,17 +114,22 @@ export class TestContext {
       ...(config || {}),
     })
 
-    const queue = new Queue({ ...queueConfig, logger: new Logger(logger) })
-    Job.setDefaultQueueServiceResolver(() => Promise.resolve(queue))
+    this.queue = new Queue({ ...queueConfig, logger: new Logger(logger) })
+    Job.setDefaultQueueServiceResolver(() => Promise.resolve(this.getQueue()))
 
-    return queue
+    return this.getQueue()
   }
 
   async teardownPostgres() {
     if (this.postgresContainer) {
       logger.debug('Stopping PostgreSQL container...')
-      await this.postgresContainer.stop()
+      await this.postgresContainer.stop({
+        remove: true,
+        removeVolumes: true,
+      })
       logger.debug('PostgreSQL container stopped')
+    } else {
+      logger.debug('PostgreSQL container not started')
     }
   }
 

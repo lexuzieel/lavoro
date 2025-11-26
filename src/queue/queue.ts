@@ -1,7 +1,7 @@
 import { Logger, createDefaultLogger } from '../logger.js'
 import { Schedule } from '../schedule/schedule.js'
 import { Job, Payload } from './contracts/job.js'
-import { QueueDriver } from './contracts/queue_driver.js'
+import { QueueDriver, QueueName } from './contracts/queue_driver.js'
 import { MemoryQueueDriver } from './drivers/memory.js'
 import { PostgresQueueDriver } from './drivers/postgres.js'
 import type {
@@ -17,7 +17,7 @@ export class Queue {
   private started: boolean = false
   private logger: Logger
   private scheduledJobs: Set<string> = new Set()
-  private lockProviders: Map<QueueConnectionName, LockFactory> = new Map()
+  private lockFactories: Map<QueueConnectionName, LockFactory> = new Map()
 
   constructor(private config: QueueConfig & { logger?: Logger }) {
     this.logger = config?.logger || createDefaultLogger('queue')
@@ -36,19 +36,16 @@ export class Queue {
       this.drivers.set(driver.connection, driver)
 
       /**
-       * Create driver-specific lock provider if
-       * no provider was explicitly configured.
+       * Create driver-specific lock factory if
+       * no lock provider was explicitly configured.
        */
       if (!driverConfig.lockProvider) {
-        const lockProvider = driver.createLockProvider()
-        if (lockProvider) {
-          this.lockProviders.set(
-            connection as QueueConnectionName,
-            lockProvider,
-          )
+        const lockFactory = driver.createLockProvider()
+        if (lockFactory) {
+          this.lockFactories.set(connection as QueueConnectionName, lockFactory)
           this.logger.trace(
             { connection, driver: driverConfig.driver },
-            'Created driver-specific lock provider',
+            'Created lock factory for driver',
           )
         }
       }
@@ -121,36 +118,35 @@ export class Queue {
 
     this.scheduledJobs.clear()
 
+    for (const [connection, driver] of this.drivers) {
+      this.logger.trace({ connection }, 'Stopping queue connection')
+      await driver.stop()
+    }
+
     for (const job of this.config.jobs) {
       await this.unregister(job)
     }
 
     this.started = false
 
-    for (const [connection, driver] of this.drivers) {
-      this.logger.trace({ connection }, 'Stopping queue connection')
-      await driver.stop()
-    }
-
     /**
-     * Destroy the lock provider for each connection, for example if the driver
-     * is using a database, the driver might need to destroy the database connection.
+     * Destroy lock factories (e.g., close database connections)
      */
-    for (const [connection, lockProvider] of this.lockProviders) {
+    for (const [connection, lockFactory] of this.lockFactories) {
       const driver = this.drivers.get(connection)
       if (driver) {
         try {
-          await driver.destroyLockProvider(lockProvider)
+          await driver.destroyLockProvider(lockFactory)
         } catch (error) {
           this.logger.warn(
             { connection, error },
-            'Error destroying lock provider',
+            'Error destroying lock factory',
           )
         }
       }
     }
 
-    this.lockProviders.clear()
+    this.lockFactories.clear()
 
     this.logger.trace('Queue service stopped')
   }
@@ -210,13 +206,21 @@ export class Queue {
     return this.drivers.keys().next().value as QueueConnectionName
   }
 
+  public getDefaultQueue(): QueueName {
+    if (this.drivers.size === 0) {
+      throw new Error(`No queue drivers available.`)
+    }
+
+    return this.drivers.values().next().value?.getDefaultQueue() as QueueName
+  }
+
   /**
-   * Get the lock provider instance for a specific connection.
-   * Returns the configured lock provider, or auto-created one based on driver.
-   * Throws an error if no lock provider is available.
+   * Get the lock factory instance for a specific connection.
+   * Returns the explicitly configured lock provider or the auto-created lock factory.
+   * Throws an error if no lock factory is available.
    *
    * @param connection - The connection name
-   * @returns The lock provider instance
+   * @returns The lock factory instance
    */
   public getLockProvider(connection: QueueConnectionName): LockFactory {
     const connectionConfig = this.config.connections[connection]
@@ -226,14 +230,14 @@ export class Queue {
       return connectionConfig.lockProvider
     }
 
-    // Return auto-created lock provider if available
-    const lockProvider = this.lockProviders.get(connection)
+    // Return auto-created lock factory
+    const lockFactory = this.lockFactories.get(connection)
 
-    if (!lockProvider) {
-      throw new Error(`No lock provider found for connection: ${connection}.`)
+    if (!lockFactory) {
+      throw new Error(`No lock factory found for connection: ${connection}.`)
     }
 
-    return lockProvider
+    return lockFactory
   }
 
   /**

@@ -1,8 +1,8 @@
-import { Job, Payload } from '../queue/contracts/job.js'
+import { Job, Payload, PayloadWithLock } from '../queue/contracts/job.js'
+import { MaybePromise } from '../types.js'
 import { PendingJobSchedule } from './pending_job_schedule.js'
 import { PendingSchedule } from './pending_schedule.js'
 import { ScheduleRegistry } from './schedule_registry.js'
-import { MaybePromise } from './types.js'
 
 import { LockFactory } from '@verrou/core'
 import { memoryStore } from '@verrou/core/drivers/memory'
@@ -113,7 +113,7 @@ export class Schedule {
   ): PendingJobSchedule<T, P> {
     return new PendingJobSchedule<T, P>(
       new job(),
-      payload,
+      payload as PayloadWithLock<T, P>,
       this.defaultLockProviderResolver,
     )
   }
