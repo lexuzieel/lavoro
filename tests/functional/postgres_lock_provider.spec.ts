@@ -27,9 +27,9 @@ describe('Queue lock provider (PostgreSQL)', () => {
     const queue = ctx.getQueue()
 
     const driver = (queue as any).drivers.get('main')
-    const tableName = (driver as any).lockProviderTableName
+    const tableName = (driver as any).lockTableName
 
-    const knexInstance = driver.lockProviderKnexInstance as ReturnType<
+    const knexInstance = driver.lockKnexInstance as ReturnType<
       typeof knex
     >
 
