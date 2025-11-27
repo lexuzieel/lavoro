@@ -34,21 +34,6 @@ export class Queue {
       driver.connection = connection as QueueConnectionName
 
       this.drivers.set(driver.connection, driver)
-
-      /**
-       * Create driver-specific lock factory if
-       * no lock provider was explicitly configured.
-       */
-      if (!driverConfig.lockProvider) {
-        const lockFactory = driver.createLockProvider()
-        if (lockFactory) {
-          this.lockFactories.set(connection as QueueConnectionName, lockFactory)
-          this.logger.trace(
-            { connection, driver: driverConfig.driver },
-            'Created lock factory for driver',
-          )
-        }
-      }
     }
   }
 
@@ -81,6 +66,44 @@ export class Queue {
     if (this.started) {
       this.logger.warn('Queue service already started')
       return
+    }
+
+    /**
+     * Create lock factories for each connection.
+     * If no lock provider was explicitly configured,
+     * create a driver-specific lock factory.
+     */
+    for (const [connection, driverConfig] of Object.entries(
+      this.config.connections,
+    )) {
+      const driver = this.drivers.get(connection as QueueConnectionName)
+      if (!driver) {
+        throw new Error(`Driver not found for connection: ${connection}.`)
+      }
+
+      /**
+       * Create driver-specific lock factory if
+       * no lock provider was explicitly configured.
+       */
+      if (!driverConfig.lockProvider) {
+        const lockFactory = driver.createLockProvider()
+        if (lockFactory) {
+          this.lockFactories.set(connection as QueueConnectionName, lockFactory)
+          this.logger.trace(
+            { connection, driver: driverConfig.driver },
+            'Created lock factory for driver',
+          )
+        }
+      } else {
+        this.lockFactories.set(
+          connection as QueueConnectionName,
+          driverConfig.lockProvider,
+        )
+        this.logger.trace(
+          { connection, driver: driverConfig.driver },
+          'Using explicitly configured lock provider for driver',
+        )
+      }
     }
 
     for (const job of this.config.jobs) {
@@ -127,26 +150,20 @@ export class Queue {
       await this.unregister(job)
     }
 
-    this.started = false
-
     /**
-     * Destroy lock factories (e.g., close database connections)
+     * Destroy lock factories for each connection.
      */
     for (const [connection, lockFactory] of this.lockFactories) {
-      const driver = this.drivers.get(connection)
-      if (driver) {
-        try {
-          await driver.destroyLockProvider(lockFactory)
-        } catch (error) {
-          this.logger.warn(
-            { connection, error },
-            'Error destroying lock factory',
-          )
-        }
+      const driver = this.drivers.get(connection as QueueConnectionName)
+      if (!driver) {
+        throw new Error(`Driver not found for connection: ${connection}.`)
       }
+
+      await driver.destroyLockProvider(lockFactory)
+      this.lockFactories.delete(connection as QueueConnectionName)
     }
 
-    this.lockFactories.clear()
+    this.started = false
 
     this.logger.trace('Queue service stopped')
   }

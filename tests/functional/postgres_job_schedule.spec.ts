@@ -2,6 +2,7 @@ import { Job } from '../../src/queue/contracts/job.js'
 import { Schedule } from '../../src/schedule/schedule.js'
 import { TestContext, logger } from '../helpers/test_context.js'
 
+import { parse } from '@lukeed/ms'
 import { describe, expect, test } from 'vitest'
 
 let jobRuns = 0
@@ -29,7 +30,7 @@ class LongRunningJob extends Job {
 describe(
   'Job schedule (PostgreSQL)',
   {
-    timeout: 30000,
+    timeout: parse('1 minute'),
   },
   () => {
     const ctx = new TestContext()
@@ -56,33 +57,25 @@ describe(
       expect(jobRuns).toBe(2)
     })
 
-    test(
-      'should not overlap by default',
-      {
-        timeout: 30000,
-      },
-      async () => {
-        jobRuns = 0
+    test('should not overlap by default', async () => {
+      jobRuns = 0
 
-        await Schedule.job(LongRunningJob, {}).every('second')
+      await Schedule.job(LongRunningJob, {}).every('second')
 
-        const expectedJobRuns = 3
+      const expectedJobRuns = 3
 
-        await new Promise((resolve) =>
-          setTimeout(
-            resolve,
-            expectedJobRuns * (2000 + LongRunningJob.duration) + 100,
-          ),
-        )
+      await new Promise((resolve) =>
+        setTimeout(
+          resolve,
+          expectedJobRuns * (2000 + LongRunningJob.duration) + 100,
+        ),
+      )
 
-        Schedule.clear()
+      expect(jobRuns).toBe(expectedJobRuns)
 
-        expect(jobRuns).toBe(expectedJobRuns)
-
-        // TODO: Get actual scheduled job count from pg-boss
-        // which should be equal to the expectedJobRuns.
-        // It is implemented, however not properly tested.
-      },
-    )
+      // TODO: Get actual scheduled job count from pg-boss
+      // which should be equal to the expectedJobRuns.
+      // It is implemented, however not properly tested.
+    })
   },
 )

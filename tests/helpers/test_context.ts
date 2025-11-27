@@ -5,6 +5,7 @@ import {
   QueueConnectionConfig,
   QueueConnectionName,
   QueueDriverType,
+  Schedule,
 } from '../../src/index.js'
 import { Job } from '../../src/queue/contracts/job.js'
 import { defineConfig } from '../../src/queue/define_config.js'
@@ -30,6 +31,23 @@ export const logger = pino({
   level: process.env.LOG_LEVEL || 'trace',
 })
 
+const connections = {
+  main: {
+    queues: {
+      default: {},
+      'custom-queue': { concurrency: 2 },
+      'disabled-queue': { concurrency: 0 },
+      'high-throughput': { concurrency: 99 },
+    },
+  },
+  alternative: {
+    queues: {
+      'first-queue': {},
+      'second-queue': {},
+    },
+  },
+} as const
+
 export class TestContext {
   private postgresContainer?: StartedPostgreSqlContainer
 
@@ -42,6 +60,14 @@ export class TestContext {
   }
 
   public getPostgresConfig(): PostgresConfig {
+    // return {
+    //   host: 'localhost',
+    //   port: 5432,
+    //   user: 'postgres',
+    //   password: 'postgres',
+    //   database: 'postgres',
+    // }
+
     return {
       host: this.getPostgres().getHost(),
       port: this.getPostgres().getPort(),
@@ -77,19 +103,12 @@ export class TestContext {
         return {
           main: {
             driver: 'postgres',
-            queues: {
-              default: {},
-              'custom-queue': { concurrency: 2 },
-              'disabled-queue': { concurrency: 0 },
-            },
+            queues: connections.main.queues,
             config: this.getPostgresConfig(),
           },
           alternative: {
             driver: 'postgres',
-            queues: {
-              'first-queue': {},
-              'second-queue': {},
-            },
+            queues: connections.alternative.queues,
             config: this.getPostgresConfig(),
           },
         }
@@ -159,28 +178,28 @@ export class TestContext {
     })
 
     beforeEach(async () => {
+      Schedule.clear()
       await this.startQueue()
     })
 
     afterEach(async () => {
+      Schedule.clear()
       await this.stopQueue()
     })
   }
 }
 
+type ConnectionNames = keyof typeof connections
+type AllQueueNames = keyof (typeof connections)[ConnectionNames]['queues']
+type ConnectionQueuesMapType = {
+  [K in ConnectionNames]: keyof (typeof connections)[K]['queues']
+}
+
 declare module '../../src/queue/types.js' {
-  export interface QueueConnections {
-    main: never
-    alternative: never
-  }
+  export interface QueueConnections extends Record<ConnectionNames, never> {}
 }
 
 declare module '../../src/queue/contracts/queue_driver.js' {
-  export interface QueuesList
-    extends Record<'default' | 'custom-queue' | 'disabled-queue', never> {}
-
-  export interface ConnectionQueuesMap {
-    main: 'default' | 'custom-queue' | 'disabled-queue'
-    alternative: 'first-queue' | 'second-queue'
-  }
+  export interface QueuesList extends Record<AllQueueNames, never> {}
+  export interface ConnectionQueuesMap extends ConnectionQueuesMapType {}
 }
