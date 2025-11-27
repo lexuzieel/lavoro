@@ -1,6 +1,6 @@
 import { Job } from './contracts/job.js'
 
-import type { LockFactory } from '@verrou/core'
+import type { LockFactory } from '@lavoro/verrou'
 
 export type WorkerOptions = {
   concurrency?: number

@@ -2,7 +2,7 @@ import { PendingDispatch } from '../pending_dispatch.js'
 import { Queue } from '../queue.js'
 import { QueueConnectionName } from '../types.js'
 
-import { SerializedLock } from '@verrou/core/types'
+import { SerializedLock } from '@lavoro/verrou/types'
 import { randomUUID } from 'node:crypto'
 
 export type Payload<T extends Job> = T extends Job<infer P> ? P : unknown

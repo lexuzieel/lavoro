@@ -2,7 +2,7 @@ import { Logger, createDefaultLogger } from '../../logger.js'
 import { QueueConfig, QueueConnectionName, WorkerOptions } from '../types.js'
 import { Job, Payload } from './job.js'
 
-import type { LockFactory } from '@verrou/core'
+import type { LockFactory } from '@lavoro/verrou'
 
 /**
  * Interface to be augmented by users to define their queue names.

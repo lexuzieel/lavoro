@@ -10,9 +10,9 @@ import {
   WorkerOptions,
 } from '../types.js'
 
-import { Lock, LockFactory } from '@verrou/core'
-import { knexStore } from '@verrou/core/drivers/knex'
-import type { SerializedLock } from '@verrou/core/types'
+import { Lock, LockFactory } from '@lavoro/verrou'
+import { knexStore } from '@lavoro/verrou/drivers/knex'
+import type { SerializedLock } from '@lavoro/verrou/types'
 import knex from 'knex'
 import { PgBoss, Job as PgBossJob } from 'pg-boss'
 

@@ -4,8 +4,8 @@ import { PendingDispatch } from '../queue/pending_dispatch.js'
 import { DefaultConnection, QueueConnectionName } from '../queue/types.js'
 import { PendingSchedule } from './pending_schedule.js'
 
-import type { LockFactory } from '@verrou/core'
-import type { SerializedLock } from '@verrou/core/types'
+import type { LockFactory } from '@lavoro/verrou'
+import type { SerializedLock } from '@lavoro/verrou/types'
 
 export class PendingJobSchedule<
   T extends Job,

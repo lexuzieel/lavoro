@@ -9,9 +9,9 @@ import {
 } from './schedule_interval.js'
 import { ScheduleRegistry } from './schedule_registry.js'
 
-import type { LockFactory } from '@verrou/core'
-import type { SerializedLock } from '@verrou/core/types'
-import { Duration } from '@verrou/core/types'
+import type { LockFactory } from '@lavoro/verrou'
+import type { SerializedLock } from '@lavoro/verrou/types'
+import { Duration } from '@lavoro/verrou/types'
 import { Cron } from 'croner'
 import { createHash } from 'node:crypto'
 

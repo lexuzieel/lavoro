@@ -2,8 +2,8 @@ import { Job } from '../../src/queue/contracts/job.js'
 import { defineConfig } from '../../src/queue/define_config.js'
 import { Queue } from '../../src/queue/queue.js'
 
-import { LockFactory } from '@verrou/core'
-import { memoryStore } from '@verrou/core/drivers/memory'
+import { LockFactory } from '@lavoro/verrou'
+import { memoryStore } from '@lavoro/verrou/drivers/memory'
 import { describe, expect, test } from 'vitest'
 
 class TestJob extends Job {
@@ -34,7 +34,7 @@ describe('Queue Lock Service', () => {
 
   test('should automatically create lock service for every connection', async () => {
     const customLockProvider = new LockFactory(memoryStore().factory())
-    
+
     const queueConfig = defineConfig({
       jobs: [TestJob],
       connection: 'main',

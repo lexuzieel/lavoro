@@ -9,8 +9,8 @@ import { TestContext } from '#tests/helpers/test_context'
 import knex from 'knex'
 import { describe, expect, test } from 'vitest'
 
-// import { LockFactory } from '@verrou/core'
-// import { knexStore } from '@verrou/core/drivers/knex'
+// import { LockFactory } from '@lavoro/verrou'
+// import { knexStore } from '@lavoro/verrou/drivers/knex'
 // import knex from 'knex'
 // import { afterEach, beforeEach, describe, expect, test } from 'vitest'
 
