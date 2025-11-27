@@ -72,6 +72,22 @@ export type QueueName = keyof QueuesList extends never
 export type QueueNameForConnection<C extends QueueConnectionName> =
   C extends keyof ConnectionQueuesMap ? ConnectionQueuesMap[C] : QueueName
 
+export type QueueDriverStopOptions = {
+  /**
+   * Whether to wait for the jobs to finish processing before stopping.
+   *
+   * Default: true
+   */
+  graceful?: boolean
+
+  /**
+   * The timeout in milliseconds to wait for the jobs to finish processing.
+   *
+   * Default: 30000 (30 seconds)
+   */
+  timeout?: number
+}
+
 export abstract class QueueDriver {
   protected logger: Logger
 
@@ -153,7 +169,7 @@ export abstract class QueueDriver {
     }
   }
 
-  public async stop(): Promise<void> {
+  public async stop(_options?: QueueDriverStopOptions): Promise<void> {
     this.registeredQueues.clear()
     this.registeredJobs.clear()
   }

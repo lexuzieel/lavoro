@@ -1,7 +1,11 @@
 import { Logger, createDefaultLogger } from '../logger.js'
 import { Schedule } from '../schedule/schedule.js'
 import { Job, Payload } from './contracts/job.js'
-import { QueueDriver, QueueName } from './contracts/queue_driver.js'
+import {
+  QueueDriver,
+  QueueDriverStopOptions,
+  QueueName,
+} from './contracts/queue_driver.js'
 import { MemoryQueueDriver } from './drivers/memory.js'
 import { PostgresQueueDriver } from './drivers/postgres.js'
 import type {
@@ -123,7 +127,12 @@ export class Queue {
     )
   }
 
-  async stop() {
+  async stop(
+    options: QueueDriverStopOptions = {
+      graceful: true,
+      timeout: 30000,
+    },
+  ) {
     if (!this.started) {
       this.logger.warn('Queue service not started')
       return
@@ -143,7 +152,7 @@ export class Queue {
 
     for (const [connection, driver] of this.drivers) {
       this.logger.trace({ connection }, 'Stopping queue connection')
-      await driver.stop()
+      await driver.stop(options)
     }
 
     for (const job of this.config.jobs) {

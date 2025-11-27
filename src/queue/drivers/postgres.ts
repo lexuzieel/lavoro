@@ -1,5 +1,9 @@
 import { Job, Payload } from '../contracts/job.js'
-import { QueueDriver, QueueName } from '../contracts/queue_driver.js'
+import {
+  QueueDriver,
+  QueueDriverStopOptions,
+  QueueName,
+} from '../contracts/queue_driver.js'
 import {
   PostgresQueueConnectionConfig,
   QueueConfig,
@@ -244,8 +248,7 @@ export class PostgresQueueDriver extends QueueDriver {
     // TODO: Add error handling
     this.boss.on('error', async (error) => {
       this.logger.error({ error }, 'Error in Postgres queue driver')
-      // throw error
-      await this.stop()
+      await this.stop({ graceful: false })
     })
 
     await this.boss.start()
@@ -258,13 +261,15 @@ export class PostgresQueueDriver extends QueueDriver {
     )
   }
 
-  public async stop(): Promise<void> {
+  public async stop(options?: QueueDriverStopOptions): Promise<void> {
+    const { graceful = true, timeout = 30000 } = options || {}
+
     this.logger.trace(
-      { connection: this.connection, driver: 'postgres' },
-      'Waiting for pg-boss to gracefully stop...',
+      { connection: this.connection, driver: 'postgres', graceful, timeout },
+      `Waiting for pg-boss to stop...`,
     )
 
-    await this.boss.stop()
+    await this.boss.stop({ graceful, timeout })
 
     this.logger.trace(
       { connection: this.connection, driver: 'postgres' },
