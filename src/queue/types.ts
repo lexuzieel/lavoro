@@ -9,11 +9,13 @@ export type WorkerOptions = {
 /**
  * Base configuration shared by all connections
  */
-type BaseQueueConnectionConfig = {
+type BaseQueueConnectionConfig<
+  Queues extends Record<string, WorkerOptions> = Record<string, WorkerOptions>,
+> = {
   /**
    * List of queue names with their options for this connection
    */
-  queues: Record<string, WorkerOptions>
+  queues: Queues
 
   /**
    * Optional lock provider (LockFactory instance) for distributed locking.
@@ -27,14 +29,18 @@ type BaseQueueConnectionConfig = {
 /**
  * Memory driver configuration
  */
-export type MemoryQueueConnectionConfig = BaseQueueConnectionConfig & {
+export type MemoryQueueConnectionConfig<
+  Queues extends Record<string, WorkerOptions> = Record<string, WorkerOptions>,
+> = BaseQueueConnectionConfig<Queues> & {
   driver: 'memory'
 }
 
 /**
  * Postgres driver configuration powered by pg-boss
  */
-export type PostgresQueueConnectionConfig = BaseQueueConnectionConfig & {
+export type PostgresQueueConnectionConfig<
+  Queues extends Record<string, WorkerOptions> = Record<string, WorkerOptions>,
+> = BaseQueueConnectionConfig<Queues> & {
   driver: 'postgres'
   config: {
     host: string
@@ -102,7 +108,7 @@ export type QueueConnectionName = keyof QueueConnections extends never
  * Queue service configuration
  */
 export type QueueConfig = {
-  jobs: (new () => Job)[]
+  jobs: readonly (new () => Job)[]
   worker?: boolean
   connection: QueueConnectionName
   connections: QueueConnectionsList

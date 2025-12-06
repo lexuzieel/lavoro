@@ -6,7 +6,11 @@ export { Job, type Payload } from './queue/contracts/job.js'
 
 export { Queue } from './queue/queue.js'
 
-export { QueueDriver } from './queue/contracts/queue_driver.js'
+export {
+  QueueDriver,
+  type QueuesList,
+  type ConnectionQueuesMap,
+} from './queue/contracts/queue_driver.js'
 export { MemoryQueueDriver } from './queue/drivers/memory.js'
 export { PostgresQueueDriver } from './queue/drivers/postgres.js'
 

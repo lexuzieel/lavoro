@@ -9,8 +9,8 @@ type QueueConfigWithConnections<Connections, Connection> = QueueConfig & {
  * Define config for queue service
  */
 export function defineConfig<
-  Connections extends QueueConnectionsList,
-  Connection extends keyof Connections = keyof Connections,
+  const Connections extends QueueConnectionsList,
+  const Connection extends keyof Connections = keyof Connections,
 >(
   config: QueueConfigWithConnections<Connections, Connection>,
 ): QueueConfigWithConnections<Connections, Connection> {
