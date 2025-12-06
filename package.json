@@ -43,7 +43,7 @@
     "test:ui": "vitest --ui",
     "test:coverage": "vitest run --coverage",
     "build": "tsup-node",
-    "watch": "tsup --watch",
+    "watch": "tsup-node --watch",
     "prepublishOnly": "npm run check && npm run test && npm run build",
     "postversion": "git push && git push --tags"
   },
