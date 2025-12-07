@@ -1,8 +1,8 @@
 import { QueueDriver, QueueName } from '../contracts/queue_driver.js'
 import { QueueConfig, WorkerOptions } from '../types.js'
 
-import { LockFactory } from '@lavoro/verrou'
-import { memoryStore } from '@lavoro/verrou/drivers/memory'
+import { LockFactory } from '@verrou/core'
+import { memoryStore } from '@verrou/core/drivers/memory'
 
 export class MemoryQueueDriver extends QueueDriver {
   constructor(

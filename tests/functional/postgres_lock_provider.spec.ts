@@ -9,8 +9,8 @@ import { TestContext } from '#tests/helpers/test_context'
 import knex from 'knex'
 import { describe, expect, test } from 'vitest'
 
-// import { LockFactory } from '@lavoro/verrou'
-// import { knexStore } from '@lavoro/verrou/drivers/knex'
+// import { LockFactory } from '@verrou/core'
+// import { knexStore } from '@verrou/core/drivers/knex'
 // import knex from 'knex'
 // import { afterEach, beforeEach, describe, expect, test } from 'vitest'
 
@@ -29,9 +29,7 @@ describe('Queue lock provider (PostgreSQL)', () => {
     const driver = (queue as any).drivers.get('main')
     const tableName = (driver as any).lockTableName
 
-    const knexInstance = driver.lockKnexInstance as ReturnType<
-      typeof knex
-    >
+    const knexInstance = driver.lockKnexInstance as ReturnType<typeof knex>
 
     const tables = await knexInstance('information_schema.tables')
       .select('table_name')

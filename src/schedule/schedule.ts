@@ -4,8 +4,8 @@ import { PendingJobSchedule } from './pending_job_schedule.js'
 import { PendingSchedule } from './pending_schedule.js'
 import { ScheduleRegistry } from './schedule_registry.js'
 
-import { LockFactory } from '@lavoro/verrou'
-import { memoryStore } from '@lavoro/verrou/drivers/memory'
+import { LockFactory } from '@verrou/core'
+import { memoryStore } from '@verrou/core/drivers/memory'
 
 /**
  * Default lock provider instance for distributed locking.

@@ -14,7 +14,7 @@ import type {
   QueueConnectionName,
 } from './types.js'
 
-import type { LockFactory } from '@lavoro/verrou'
+import type { LockFactory } from '@verrou/core'
 
 export class Queue {
   private drivers: Map<QueueConnectionName, QueueDriver> = new Map()
