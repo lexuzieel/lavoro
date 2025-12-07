@@ -183,12 +183,12 @@ export class TestContext {
   ) {
     beforeAll(async () => {
       this.queue = await this.setupQueue(jobs, driver, config)
-    })
+    }, 60 * 1000)
 
     afterAll(async () => {
       await this.teardownPostgres()
       this.queue = undefined
-    })
+    }, 30 * 1000)
 
     beforeEach(async () => {
       Schedule.clear()
@@ -198,7 +198,7 @@ export class TestContext {
     afterEach(async () => {
       Schedule.clear()
       await this.stopQueue({ timeout: 30000 })
-    }, 30000)
+    }, 30 * 1000)
   }
 }
 
