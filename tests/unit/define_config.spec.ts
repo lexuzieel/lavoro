@@ -1,6 +1,6 @@
 import { defineConfig, memory, postgres } from '../../src/index.js'
 
-import { describe, expect, test } from 'vitest'
+import { describe, test } from 'vitest'
 
 describe('DefineConfig', () => {
   test('should accept postgres driver with required config', async () => {
