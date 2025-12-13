@@ -27,7 +27,10 @@
     "build:core": "npm run build -w @lavoro/core",
     "build:memory": "npm run build -w @lavoro/memory",
     "build:postgres": "npm run build -w @lavoro/postgres",
-    "watch": "tsup-node --watch",
+    "watch": "npm run watch:core & npm run watch:memory & npm run watch:postgres & wait",
+    "watch:core": "npm run watch -w @lavoro/core",
+    "watch:memory": "npm run watch -w @lavoro/memory",
+    "watch:postgres": "npm run watch -w @lavoro/postgres",
     "clean": "rm -rf packages/*/build packages/*/dist",
     "prepublishOnly": "npm run check && npm run test && npm run build"
   },
