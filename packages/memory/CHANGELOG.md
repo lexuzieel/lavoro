@@ -1,5 +1,13 @@
 # @lavoro/memory
 
+## 0.3.4
+
+### Patch Changes
+
+- Release patch version
+- Updated dependencies
+  - @lavoro/core@0.3.4
+
 ## 0.3.3
 
 ### Patch Changes
