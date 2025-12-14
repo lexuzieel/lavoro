@@ -47,14 +47,14 @@ jobs:
           echo "tag=$TAG" >> $GITHUB_OUTPUT
           echo "version=$VERSION" >> $GITHUB_OUTPUT
 
-      - name: Publish packages to npm
-        run: |
-          npm config set //registry.npmjs.org/:_authToken=$NPM_TOKEN
-          cd packages/core && npm publish --access public --provenance
-          cd ../memory && npm publish --access public --provenance
-          cd ../postgres && npm publish --access public --provenance
-        env:
-          NPM_TOKEN: ${{ secrets.NPM_TOKEN }}
+      # - name: Publish packages to npm
+      #   run: |
+      #     npm config set //registry.npmjs.org/:_authToken=$NPM_TOKEN
+      #     cd packages/core && npm publish --access public --provenance
+      #     cd ../memory && npm publish --access public --provenance
+      #     cd ../postgres && npm publish --access public --provenance
+      #   env:
+      #     NPM_TOKEN: ${{ secrets.NPM_TOKEN }}
 
       - name: Extract changelog for version
         id: changelog

@@ -1,6 +1,6 @@
 {
   "name": "@lavoro/postgres",
-  "version": "0.3.13",
+  "version": "0.3.14",
   "type": "module",
   "description": "PostgreSQL queue driver for Lavoro with support for distributed locking",
   "author": "Aleksei Ivanov <contact@aleksei.dev>",
