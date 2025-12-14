@@ -5,6 +5,9 @@
   "description": "A type-safe, flexible queue library for Node.js with support for multiple drivers",
   "author": "Aleksei Ivanov <contact@aleksei.dev>",
   "license": "MIT",
+  "publishConfig": {
+    "access": "public"
+  },
   "repository": {
     "type": "git",
     "url": "git+https://github.com/lexuzieel/lavoro.git",

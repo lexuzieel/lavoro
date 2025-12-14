@@ -5,6 +5,9 @@
   "description": "In-memory queue driver for Lavoro",
   "author": "Aleksei Ivanov <contact@aleksei.dev>",
   "license": "MIT",
+  "publishConfig": {
+    "access": "public"
+  },
   "repository": {
     "type": "git",
     "url": "git+https://github.com/lexuzieel/lavoro.git",
