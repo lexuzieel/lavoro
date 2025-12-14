@@ -2,7 +2,6 @@
   "name": "lavoro-monorepo",
   "private": true,
   "type": "module",
-  "version": "0.3.0",
   "description": "A type-safe, flexible queue library for Node.js with support for multiple drivers",
   "author": "Aleksei Ivanov <contact@aleksei.dev>",
   "license": "MIT",
