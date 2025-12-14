@@ -1,5 +1,13 @@
 # @lavoro/postgres
 
+## 0.3.3
+
+### Patch Changes
+
+- Release patch version
+- Updated dependencies
+  - @lavoro/core@0.3.3
+
 ## 0.3.2
 
 ### Patch Changes
