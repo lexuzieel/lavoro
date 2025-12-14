@@ -18,11 +18,14 @@
     "url": "https://github.com/lexuzieel/lavoro/issues"
   },
   "keywords": [
+    "worker",
     "queue",
+    "distributed",
+    "job",
+    "task",
+    "scheduler",
     "memory",
-    "in-memory",
-    "lavoro",
-    "driver"
+    "ephemeral"
   ],
   "exports": {
     ".": {

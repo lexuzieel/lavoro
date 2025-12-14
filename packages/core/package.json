@@ -18,11 +18,15 @@
     "url": "https://github.com/lexuzieel/lavoro/issues"
   },
   "keywords": [
-    "queue",
-    "background",
     "worker",
+    "queue",
+    "distributed",
     "job",
-    "scheduler"
+    "task",
+    "scheduler",
+    "postgres",
+    "postgresql",
+    "pg-boss"
   ],
   "exports": {
     ".": {
