@@ -3,7 +3,24 @@ import type {
   Levels,
   LogObject,
 } from '@julr/utils/logger'
-import pino from 'pino'
+
+/**
+ * No-op logger implementation used as fallback when pino is not installed
+ */
+class NoOpLogger implements InternalLogger {
+  level: Levels = 'trace'
+
+  child(_obj: LogObject): InternalLogger {
+    return this
+  }
+
+  trace(_msg: any, _obj?: any): void {}
+  debug(_msg: any, _obj?: any): void {}
+  info(_msg: any, _obj?: any): void {}
+  warn(_msg: any, _obj?: any): void {}
+  error(_msg: any, _obj?: any): void {}
+  fatal(_msg: any, _obj?: any): void {}
+}
 
 export class Logger {
   private internalLogger: InternalLogger
@@ -45,5 +62,12 @@ export function createDefaultLogger(
   name: string,
   level: Levels = 'info',
 ): Logger {
-  return new Logger(pino({ name, level }))
+  try {
+    // Try to require pino synchronously
+    const pino = require('pino')
+    return new Logger(pino({ name, level }))
+  } catch {
+    // Fallback to no-op logger if pino is not installed
+    return new Logger(new NoOpLogger())
+  }
 }
