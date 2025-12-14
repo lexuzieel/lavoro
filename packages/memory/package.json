@@ -1,6 +1,6 @@
 {
   "name": "@lavoro/memory",
-  "version": "0.3.0",
+  "version": "0.3.1",
   "type": "module",
   "description": "In-memory queue driver for Lavoro",
   "author": "Aleksei Ivanov <contact@aleksei.dev>",
