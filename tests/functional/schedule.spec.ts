@@ -1,6 +1,5 @@
-import { Schedule } from '../../src/schedule/schedule.js'
-import { ScheduleRegistry } from '../../src/schedule/schedule_registry.js'
-
+import { Schedule } from '@lavoro/core'
+import { ScheduleRegistry } from '@lavoro/core'
 import { beforeEach, describe, expect, test } from 'vitest'
 
 describe('Schedule', () => {
@@ -79,43 +78,55 @@ describe('Schedule', () => {
     expect(duration).toBeLessThan(5000)
   })
 
-  test('should not overlap by default', async () => {
-    Schedule.clear()
-    let callCount = 0
+  test(
+    'should not overlap by default',
+    {
+      timeout: 10000,
+    },
+    async () => {
+      Schedule.clear()
+      let callCount = 0
 
-    await Schedule.call('test-task', async () => {
-      await new Promise((resolve) => setTimeout(resolve, 4000))
-      callCount++
-    }).every('second')
+      await Schedule.call('test-task', async () => {
+        await new Promise((resolve) => setTimeout(resolve, 4000))
+        callCount++
+      }).every('second')
 
-    // Wait for 6 seconds
-    await new Promise((resolve) => setTimeout(resolve, 6 * 1000 + 100))
+      // Wait for 6 seconds
+      await new Promise((resolve) => setTimeout(resolve, 6 * 1000 + 100))
 
-    Schedule.clear()
+      Schedule.clear()
 
-    // Each task takes 4 seconds, so after
-    // 6 seconds, we should have had 1 call.
-    expect(callCount).toBe(1)
-  })
+      // Each task takes 4 seconds, so after
+      // 6 seconds, we should have had 1 call.
+      expect(callCount).toBe(1)
+    },
+  )
 
-  test('should overlap if explicitly allowed', async () => {
-    Schedule.clear()
-    let callCount = 0
+  test(
+    'should overlap if explicitly allowed',
+    {
+      timeout: 10000,
+    },
+    async () => {
+      Schedule.clear()
+      let callCount = 0
 
-    await Schedule.call('test-task', async () => {
-      await new Promise((resolve) => setTimeout(resolve, 4000))
-      callCount++
-    })
-      .every('second')
-      .overlapping()
+      await Schedule.call('test-task', async () => {
+        await new Promise((resolve) => setTimeout(resolve, 4000))
+        callCount++
+      })
+        .every('second')
+        .overlapping()
 
-    // Wait for 6 seconds
-    await new Promise((resolve) => setTimeout(resolve, 6 * 1000 + 100))
+      // Wait for 6 seconds
+      await new Promise((resolve) => setTimeout(resolve, 6 * 1000 + 100))
 
-    Schedule.clear()
+      Schedule.clear()
 
-    // Each task takes 4 seconds, so after
-    // 6 seconds, we should have had 2 calls.
-    expect(callCount).toBe(2)
-  })
+      // Each task takes 4 seconds, so after
+      // 6 seconds, we should have had 2 calls.
+      expect(callCount).toBe(2)
+    },
+  )
 })

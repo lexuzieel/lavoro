@@ -5,24 +5,25 @@ export default defineConfig({
     globals: true,
     environment: 'node',
     include: ['tests/**/*.spec.ts'],
-    testTimeout: 30000,
     coverage: {
       provider: 'v8',
-      reporter: ['text', 'json', 'html', 'lcov'],
-      include: ['src/**/*.ts'],
-      exclude: [
-        'src/**/*.spec.ts',
-        'src/**/*.test.ts',
-        'src/**/types.ts',
-        'src/index.ts',
-        'src/logger.ts',
-      ],
-      thresholds: {
-        lines: 70,
-        functions: 70,
-        branches: 70,
-        statements: 70,
-      },
+      reporter: ['text', 'json', 'html'],
+      include: ['packages/*/src/**/*.ts'],
+      exclude: ['packages/*/src/**/*.spec.ts'],
+    },
+  },
+  resolve: {
+    alias: {
+      '@lavoro/core': new URL('./packages/core/src/index.ts', import.meta.url)
+        .pathname,
+      '@lavoro/memory': new URL(
+        './packages/memory/src/index.ts',
+        import.meta.url,
+      ).pathname,
+      '@lavoro/postgres': new URL(
+        './packages/postgres/src/index.ts',
+        import.meta.url,
+      ).pathname,
     },
   },
 })

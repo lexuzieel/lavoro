@@ -1,6 +1,5 @@
-import { getDistributedLockKey } from '../../src/schedule/pending_schedule.js'
-import { Schedule } from '../../src/schedule/schedule.js'
-
+import { getDistributedLockKey } from '@lavoro/core'
+import { Schedule } from '@lavoro/core'
 import { beforeEach, describe, expect, test } from 'vitest'
 
 const prepareLock = async (name: string) => {

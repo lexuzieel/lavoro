@@ -7,70 +7,26 @@ import type { LockFactory } from '@verrou/core'
 /**
  * Interface to be augmented by users to define their queue names.
  * This enables type-safe queue names throughout the application.
- *
- * Queue names should be defined in config/queue.ts within each connection:
- *
- * @example
- * ```ts
- * // config/queue.ts
- * const queueConfig = defineConfig({
- *   connection: 'main',
- *   connections: {
- *     main: {
- *       driver: 'memory',
- *       queues: {
- *         default: { concurrency: 1 },
- *         emails: { concurrency: 3 },
- *       },
- *     },
- *     background: {
- *       driver: 'postgres',
- *       queues: {
- *         'heavy-tasks': { concurrency: 2 },
- *         reports: { concurrency: 1 },
- *       },
- *       config: { ... },
- *     },
- *   },
- * })
- *
- * // Type augmentation happens automatically via InferQueueNames
- * declare module 'lavoro' {
- *   interface QueuesList extends Record<InferQueueNames<typeof queueConfig>, never> {}
- * }
- * ```
- *
- * After defining your queue names, you'll get autocomplete and type checking:
- * ```ts
- * await queue.listen('emails')        // ✓ Valid
- * await queue.listen('heavy-tasks')   // ✓ Valid
- * await queue.listen('invalid')       // ✗ Type error
- *
- * await job.dispatch(payload).onQueue('emails')  // ✓ Valid
- * await job.dispatch(payload).onQueue('typo')    // ✗ Type error
- * ```
  */
-export interface QueuesList {}
+export interface QueueList {}
 
 /**
  * Interface to be augmented by users to map connections to their queue names.
  * This enables connection-specific type-safe queue names.
  */
-export interface ConnectionQueuesMap {}
+export interface ConnectionQueues {}
 
 /**
- * Extract queue names from QueuesList.
+ * Extract queue names from QueueList.
  * Defaults to string if no queues are defined.
  */
-export type QueueName = keyof QueuesList extends never
-  ? string
-  : keyof QueuesList
+export type QueueName = keyof QueueList extends never ? string : keyof QueueList
 
 /**
- * Extract queue names for a specific connection from ConnectionQueuesMap.
+ * Extract queue names for a specific connection from ConnectionQueues.
  */
 export type QueueNameForConnection<C extends QueueConnectionName> =
-  C extends keyof ConnectionQueuesMap ? ConnectionQueuesMap[C] : QueueName
+  C extends keyof ConnectionQueues ? ConnectionQueues[C] : QueueName
 
 export type QueueDriverStopOptions = {
   /**
@@ -88,23 +44,25 @@ export type QueueDriverStopOptions = {
   timeout?: number
 }
 
-export abstract class QueueDriver {
+export type QueueDriverConfig = {}
+
+export abstract class QueueDriver<
+  Config extends QueueDriverConfig = QueueDriverConfig,
+> {
   protected logger: Logger
 
   protected registeredQueues: Set<string> = new Set()
 
   protected registeredJobs: Map<string, new () => Job> = new Map()
 
-  protected config: QueueConfig
-
-  protected options: Record<QueueName, WorkerOptions>
-
   public connection: QueueConnectionName | undefined
 
-  constructor(config: QueueConfig, options: Record<QueueName, WorkerOptions>) {
+  constructor(
+    protected config: QueueConfig,
+    protected options: Record<string, WorkerOptions>,
+    protected driverConfig: Config = {} as Config,
+  ) {
     this.logger = createDefaultLogger('queue')
-    this.config = config
-    this.options = options
   }
 
   public setLogger(logger: Logger): void {

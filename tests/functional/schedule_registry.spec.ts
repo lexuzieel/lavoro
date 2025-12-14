@@ -1,5 +1,4 @@
-import { ScheduleRegistry } from '../../src/schedule/schedule_registry.js'
-
+import { ScheduleRegistry } from '@lavoro/core'
 import { Cron } from 'croner'
 import { beforeEach, describe, expect, test } from 'vitest'
 

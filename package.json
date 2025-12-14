@@ -1,7 +1,7 @@
 {
-  "name": "lavoro",
+  "name": "lavoro-monorepo",
+  "private": true,
   "type": "module",
-  "version": "0.2.3",
   "description": "A type-safe, flexible queue library for Node.js with support for multiple drivers",
   "author": "Aleksei Ivanov <contact@aleksei.dev>",
   "license": "MIT",
@@ -13,49 +13,28 @@
   "bugs": {
     "url": "https://github.com/lexuzieel/lavoro/issues"
   },
-  "keywords": [
-    "queue",
-    "background",
-    "worker",
-    "pg-boss",
-    "postgres"
+  "workspaces": [
+    "packages/*"
   ],
-  "exports": {
-    ".": {
-      "types": "./build/index.d.ts",
-      "import": "./build/index.js"
-    }
-  },
-  "main": "build/index.js",
-  "files": [
-    "build"
-  ],
-  "imports": {
-    "#services/*": "./src/services/*.js",
-    "#providers/*": "./src/providers/*.js",
-    "#tests/*": "./tests/*.js",
-    "#config/*": "./src/config/*.js"
-  },
   "scripts": {
-    "check": "tsc --noEmit",
+    "check": "npm run check --workspaces --if-present",
     "test": "vitest run",
     "test:watch": "vitest",
     "test:ui": "vitest --ui",
     "test:coverage": "vitest run --coverage",
-    "build": "tsup-node",
-    "watch": "tsup-node --watch",
-    "prepublishOnly": "npm run check && npm run test && npm run build",
-    "postversion": "git push && git push --tags"
+    "build": "npm run build --workspaces --if-present",
+    "build:core": "npm run build -w @lavoro/core",
+    "build:memory": "npm run build -w @lavoro/memory",
+    "build:postgres": "npm run build -w @lavoro/postgres",
+    "watch": "npm run watch:core & npm run watch:memory & npm run watch:postgres & wait",
+    "watch:core": "npm run watch -w @lavoro/core",
+    "watch:memory": "npm run watch -w @lavoro/memory",
+    "watch:postgres": "npm run watch -w @lavoro/postgres",
+    "clean": "rm -rf packages/*/build packages/*/dist",
+    "prepublishOnly": "npm run check && npm run test && npm run build"
   },
-  "peerDependencies": {
-    "knex": "^3.1.0",
-    "pg": "^8.16.3",
-    "pg-boss": "^12.2.0",
-    "pino": "^10.1.0"
-  },
-  "peerDependenciesMeta": {},
   "devDependencies": {
-    "@adonisjs/tsconfig": "^1.4.1",
+    "@changesets/cli": "^2.29.8",
     "@julr/utils": "^1.9.0",
     "@testcontainers/postgresql": "^11.8.1",
     "@trivago/prettier-plugin-sort-imports": "^6.0.0",
@@ -64,8 +43,12 @@
     "@vitest/ui": "^4.0.10",
     "cron-parser": "^5.4.0",
     "dotenv": "^16.6.1",
+    "knex": "^3.1.0",
     "nodemon": "^3.1.11",
     "p-defer": "^4.0.1",
+    "pg": "^8.16.3",
+    "pg-boss": "^12.2.0",
+    "pino": "^10.1.0",
     "pino-pretty": "^13.1.2",
     "prettier": "^3.6.2",
     "testcontainers": "^11.8.1",
@@ -73,10 +56,5 @@
     "tsx": "^4.20.6",
     "typescript": "^5.9.3",
     "vitest": "^4.0.10"
-  },
-  "dependencies": {
-    "@lukeed/ms": "^2.0.2",
-    "@verrou/core": "^0.5.2",
-    "croner": "^9.1.0"
   }
 }

@@ -1,5 +1,4 @@
-import { PendingSchedule } from '../../src/schedule/pending_schedule.js'
-
+import { PendingSchedule } from '@lavoro/core'
 import { CronExpressionOptions, CronExpressionParser } from 'cron-parser'
 import { describe, expect, test } from 'vitest'
 

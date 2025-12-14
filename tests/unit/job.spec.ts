@@ -1,5 +1,4 @@
-import { Job } from '../../src/queue/contracts/job.js'
-
+import { Job } from '@lavoro/core'
 import { describe, expect, test } from 'vitest'
 
 class TestJob extends Job {

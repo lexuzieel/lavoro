@@ -1,8 +1,7 @@
 {
-  "extends": "@adonisjs/tsconfig/tsconfig.package.json",
+  "extends": "./packages/core/tsconfig.json",
   "compilerOptions": {
-    "rootDir": "./",
-    "outDir": "./build",
-    "target": "es2015"
-  }
+    "rootDir": "."
+  },
+  "include": ["tests/**/*"]
 }

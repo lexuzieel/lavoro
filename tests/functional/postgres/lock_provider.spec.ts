@@ -1,11 +1,6 @@
-// import { Job } from '../../src/queue/contracts/job.js'
-// import { defineConfig } from '../../src/queue/define_config.js'
-// import { Queue } from '../../src/queue/queue.js'
-// import { Schedule } from '../../src/schedule/schedule.js'
-// import { TestContext } from '../helpers/test_context.js'
-import { Job } from '../../src/index.js'
+import { TestContext } from '../../helpers/test_context.js'
 
-import { TestContext } from '#tests/helpers/test_context'
+import { Job } from '@lavoro/core'
 import knex from 'knex'
 import { describe, expect, test } from 'vitest'
 

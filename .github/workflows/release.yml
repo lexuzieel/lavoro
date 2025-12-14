@@ -1,59 +1,55 @@
-name: Create Release
+name: Release
 
 on:
   push:
-    tags:
-      - 'v*'
+    branches:
+      - main
+
+concurrency: ${{ github.workflow }}-${{ github.ref }}
 
 jobs:
   release:
+    name: Release
     runs-on: ubuntu-latest
-
     permissions:
       contents: write
+      pull-requests: write
+      id-token: write
 
     steps:
-      - name: Checkout code
+      - name: Checkout Repo
         uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
         with:
-          fetch-depth: 0
+          node-version: '20'
+          registry-url: 'https://registry.npmjs.org'
+          cache: 'npm'
 
-      - name: Extract version from tag
-        id: version
-        run: |
-          TAG=${GITHUB_REF#refs/tags/}
-          VERSION=${TAG#v}
-          echo "tag=$TAG" >> $GITHUB_OUTPUT
-          echo "version=$VERSION" >> $GITHUB_OUTPUT
+      - name: Install Dependencies
+        run: npm ci
 
-      - name: Extract changelog for version
-        id: changelog
-        run: |
-          VERSION=${{ steps.version.outputs.version }}
+      - name: Build packages
+        run: npm run build
 
-          # Extract the section for this version from CHANGELOG.md
-          if [ -f CHANGELOG.md ]; then
-            # Get content between [VERSION] and next version or end
-            CONTENT=$(awk "/^## \[$VERSION\]/,/^## \[/{if(/^## \[/ && !/^## \[$VERSION\]/)exit;print}" CHANGELOG.md | sed '1d')
-            
-            # If no specific version found, use a default message
-            if [ -z "$CONTENT" ]; then
-              CONTENT="Release $VERSION"
-            fi
-            
-            # Save to file to preserve formatting
-            echo "$CONTENT" > release_notes.md
-          else
-            echo "Release $VERSION" > release_notes.md
-          fi
+      - name: Create Release Pull Request or Publish to npm
+        id: changesets
+        uses: changesets/action@v1
+        with:
+          publish: npx changeset publish --provenance
+          version: npx changeset version
+          commit: 'chore: version packages'
+          title: 'chore: version packages'
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Create GitHub Release
+        if: steps.changesets.outputs.published == 'true'
         uses: softprops/action-gh-release@v2
         with:
-          name: Release ${{ steps.version.outputs.tag }}
-          body_path: release_notes.md
-          draft: false
-          prerelease: false
+          tag_name: v${{ fromJson(steps.changesets.outputs.publishedPackages)[0].version }}
+          name: Release v${{ fromJson(steps.changesets.outputs.publishedPackages)[0].version }}
           generate_release_notes: true
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

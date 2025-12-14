@@ -1,4 +1,5 @@
 import { Job } from './contracts/job.js'
+import { QueueDriver, QueueDriverConfig } from './contracts/queue_driver.js'
 
 import type { LockFactory } from '@verrou/core'
 
@@ -7,57 +8,38 @@ export type WorkerOptions = {
 }
 
 /**
- * Base configuration shared by all connections
+ * Constructor type for an abstract QueueDriver
+ * that accepts optional driver-specific config.
  */
-type BaseQueueConnectionConfig<
+type QueueDriverConstructor<Driver extends QueueDriver = QueueDriver> = new (
+  config: QueueConfig,
+  queues: Record<string, WorkerOptions>,
+  driverConfig?: any,
+) => Driver
+
+/**
+ * Driver descriptor that combines both the driver and its config.
+ * This is used by builder functions like postgres() and memory().
+ */
+export type ConfiguredDriver<
+  Driver extends QueueDriver = QueueDriver,
+  Config extends QueueDriverConfig = QueueDriverConfig,
+> = {
+  constructor: QueueDriverConstructor<Driver>
+  config?: Config
+}
+
+/**
+ * Configuration for a specific queue connection.
+ */
+export type QueueConnectionConfig<
+  Driver extends QueueDriver = QueueDriver,
   Queues extends Record<string, WorkerOptions> = Record<string, WorkerOptions>,
 > = {
-  /**
-   * List of queue names with their options for this connection
-   */
+  driver: ConfiguredDriver<Driver>
   queues: Queues
-
-  /**
-   * Optional lock provider (LockFactory instance) for distributed locking.
-   *
-   * If not provided, a lock provider will be automatically created
-   * based on the connection driver.
-   */
   lockProvider?: LockFactory
 }
-
-/**
- * Memory driver configuration
- */
-export type MemoryQueueConnectionConfig<
-  Queues extends Record<string, WorkerOptions> = Record<string, WorkerOptions>,
-> = BaseQueueConnectionConfig<Queues> & {
-  driver: 'memory'
-}
-
-/**
- * Postgres driver configuration powered by pg-boss
- */
-export type PostgresQueueConnectionConfig<
-  Queues extends Record<string, WorkerOptions> = Record<string, WorkerOptions>,
-> = BaseQueueConnectionConfig<Queues> & {
-  driver: 'postgres'
-  config: {
-    host: string
-    port: string | number
-    user: string
-    password: string
-    database: string
-  }
-}
-
-export type QueueConnectionConfig =
-  | MemoryQueueConnectionConfig
-  | PostgresQueueConnectionConfig
-
-export type QueueDriverType =
-  | MemoryQueueConnectionConfig['driver']
-  | PostgresQueueConnectionConfig['driver']
 
 /**
  * Interface to be augmented by users to define their connection names.
@@ -78,27 +60,22 @@ export interface QueueConnections {}
 /**
  * Interface to be augmented by users to define their default connection.
  * This is used to provide correct type hints when no explicit connection is specified.
- *
- * Usage in config files:
- * ```ts
- * declare module 'lavoro' {
- *   export interface DefaultConnection {
- *     name: InferDefaultConnection<typeof queueConfig>
- *   }
- * }
- * ```
  */
 export interface DefaultConnection {}
 
 /**
  * List of registered queue connections
- * Defaults to a generic record if no connections are defined
+ * and their related driver configuration.
  */
-export type QueueConnectionsList = Record<string, QueueConnectionConfig>
+export type QueueConnectionsList = Record<
+  string,
+  QueueConnectionConfig<QueueDriver>
+>
 
 /**
- * Possible connection names - extracts keys from augmented QueueConnections interface
- * If QueueConnections is not augmented, defaults to string
+ * Possible connection names using keys from augmented QueueConnections.
+ *
+ * If QueueConnections is not augmented, defaults to string.
  */
 export type QueueConnectionName = keyof QueueConnections extends never
   ? string
@@ -134,10 +111,12 @@ export type InferDefaultConnection<T> = T extends {
  * Infer queue names from all connections
  */
 export type InferQueueNames<T> = T extends { connections: infer Connections }
-  ? Connections extends QueueConnectionsList
+  ? Connections extends Record<string, { queues: Record<string, any> }>
     ? {
-        [K in keyof Connections]: keyof Connections[K]['queues']
-      }[keyof Connections]
+        [K in {
+          [CK in keyof Connections]: keyof Connections[CK]['queues']
+        }[keyof Connections]]: never
+      }
     : never
   : never
 
@@ -148,7 +127,7 @@ export type InferQueueNamesForConnection<
   T,
   ConnectionName extends string,
 > = T extends { connections: infer Connections }
-  ? Connections extends QueueConnectionsList
+  ? Connections extends Record<string, { queues: Record<string, any> }>
     ? ConnectionName extends keyof Connections
       ? keyof Connections[ConnectionName]['queues']
       : never
@@ -159,10 +138,10 @@ export type InferQueueNamesForConnection<
  * Infer the connection-to-queues mapping from the config
  * Returns a mapped type where each connection name maps to its queue names
  */
-export type InferConnectionQueuesMap<T> = T extends {
+export type InferConnectionQueues<T> = T extends {
   connections: infer Connections
 }
-  ? Connections extends QueueConnectionsList
+  ? Connections extends Record<string, { queues: Record<string, any> }>
     ? {
         [K in keyof Connections]: keyof Connections[K]['queues']
       }

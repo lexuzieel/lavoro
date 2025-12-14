@@ -1,8 +1,7 @@
-import { Job } from '../../src/queue/contracts/job.js'
-import { Schedule } from '../../src/schedule/schedule.js'
-import { TestContext, logger } from '../helpers/test_context.js'
+import { TestContext, logger } from '../../helpers/test_context.js'
 
-import { parse } from '@lukeed/ms'
+import { Job } from '@lavoro/core'
+import { Schedule } from '@lavoro/core'
 import { describe, expect, test } from 'vitest'
 
 let jobRuns = 0
@@ -32,7 +31,7 @@ class LongRunningJob extends Job {
 describe(
   'Job schedule (PostgreSQL)',
   {
-    timeout: parse('1 minute'),
+    timeout: 60 * 1000, // 1 minute
   },
   () => {
     const ctx = new TestContext()

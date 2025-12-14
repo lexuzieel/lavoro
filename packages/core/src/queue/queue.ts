@@ -6,8 +6,6 @@ import {
   QueueDriverStopOptions,
   QueueName,
 } from './contracts/queue_driver.js'
-import { MemoryQueueDriver } from './drivers/memory.js'
-import { PostgresQueueDriver } from './drivers/postgres.js'
 import type {
   QueueConfig,
   QueueConnectionConfig,
@@ -41,25 +39,17 @@ export class Queue {
     }
   }
 
-  private createDriver(config: QueueConnectionConfig): QueueDriver {
-    let driver: QueueDriver
+  private createDriver(
+    config: QueueConnectionConfig<QueueDriver>,
+  ): QueueDriver {
+    const { constructor: driverConstructor, config: driverConfig } =
+      config.driver
 
-    switch (config.driver) {
-      case 'memory':
-        driver = new MemoryQueueDriver(this.config, config.queues)
-        break
-      case 'postgres':
-        driver = new PostgresQueueDriver(
-          this.config,
-          config.queues,
-          config.config,
-        )
-        break
-      default:
-        // TypeScript exhaustiveness check
-        const _exhaustive: never = config
-        throw new Error(`Invalid queue driver: ${(_exhaustive as any).driver}.`)
-    }
+    const driver = new driverConstructor(
+      this.config,
+      config.queues,
+      driverConfig,
+    )
 
     driver.setLogger(this.logger)
 

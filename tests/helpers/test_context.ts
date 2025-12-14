@@ -1,17 +1,14 @@
 import {
+  Job,
   Logger,
   Queue,
   QueueConfig,
-  QueueConnectionConfig,
   QueueConnectionName,
-  QueueDriverType,
+  QueueDriverStopOptions,
   Schedule,
-} from '../../src/index.js'
-import { Job } from '../../src/queue/contracts/job.js'
-import { QueueDriverStopOptions } from '../../src/queue/contracts/queue_driver.js'
-import { defineConfig } from '../../src/queue/define_config.js'
-import { PostgresConfig } from '../../src/queue/drivers/postgres.js'
-
+  defineConfig,
+} from '@lavoro/core'
+import { type PostgresConfig, postgres } from '@lavoro/postgres'
 import {
   PostgreSqlContainer,
   StartedPostgreSqlContainer,
@@ -22,6 +19,8 @@ import pino from 'pino'
 import { afterAll, afterEach, beforeAll, beforeEach } from 'vitest'
 
 dotenv.config()
+
+type DriverType = 'memory' | 'postgres'
 
 export const logger = pino({
   transport: {
@@ -101,38 +100,43 @@ export class TestContext {
   }
 
   private async getConnectionsConfig(
-    driver: QueueDriverType,
-  ): Promise<Record<QueueConnectionName, QueueConnectionConfig>> {
-    switch (driver) {
-      case 'postgres':
-        logger.debug('Starting PostgreSQL container...')
+    driverType: DriverType,
+  ): Promise<Record<QueueConnectionName, any>> {
+    const driver = await (async () => {
+      switch (driverType) {
+        case 'postgres': {
+          logger.debug('Starting PostgreSQL container...')
 
-        this.postgresContainer = await new PostgreSqlContainer(
-          'postgres:16-alpine',
-        ).start()
+          this.postgresContainer = await new PostgreSqlContainer(
+            'postgres:16-alpine',
+          ).start()
 
-        logger.debug('PostgreSQL container started')
+          logger.debug('PostgreSQL container started')
 
-        return {
-          main: {
-            driver: 'postgres',
-            queues: connections.main.queues,
-            config: this.getPostgresConfig(),
-          },
-          alternative: {
-            driver: 'postgres',
-            queues: connections.alternative.queues,
-            config: this.getPostgresConfig(),
-          },
+          const pgConfig = this.getPostgresConfig()
+          return postgres(pgConfig)
         }
-      default:
-        throw new Error(`Unsupported driver: ${driver}`)
+        default: {
+          throw new Error(`Unsupported driver: ${driverType}`)
+        }
+      }
+    })()
+
+    return {
+      main: {
+        driver,
+        queues: connections.main.queues,
+      },
+      alternative: {
+        driver,
+        queues: connections.alternative.queues,
+      },
     }
   }
 
   async setupQueue(
     jobs: (new () => Job)[] = [],
-    driver: QueueDriverType,
+    driverType: DriverType,
     config?: Partial<QueueConfig>,
   ) {
     if (this.queue) {
@@ -142,7 +146,7 @@ export class TestContext {
     const queueConfig = defineConfig({
       jobs,
       connection: 'main',
-      connections: await this.getConnectionsConfig(driver),
+      connections: await this.getConnectionsConfig(driverType),
       ...(config || {}),
     })
 
@@ -178,11 +182,11 @@ export class TestContext {
    */
   setup(
     jobs: (new () => Job)[] = [],
-    driver: QueueDriverType,
+    driverType: DriverType,
     config?: Partial<QueueConfig>,
   ) {
     beforeAll(async () => {
-      this.queue = await this.setupQueue(jobs, driver, config)
+      this.queue = await this.setupQueue(jobs, driverType, config)
     }, 60 * 1000)
 
     afterAll(async () => {
@@ -204,15 +208,19 @@ export class TestContext {
 
 type ConnectionNames = keyof typeof connections
 type AllQueueNames = keyof (typeof connections)[ConnectionNames]['queues']
-type ConnectionQueuesMapType = {
+
+type QueueListType = {
+  [K in AllQueueNames]: never
+}
+type QueueConnectionsType = {
+  [K in ConnectionNames]: never
+}
+type ConnectionQueuesType = {
   [K in ConnectionNames]: keyof (typeof connections)[K]['queues']
 }
 
-declare module '../../src/queue/types.js' {
-  export interface QueueConnections extends Record<ConnectionNames, never> {}
-}
-
-declare module '../../src/queue/contracts/queue_driver.js' {
-  export interface QueuesList extends Record<AllQueueNames, never> {}
-  export interface ConnectionQueuesMap extends ConnectionQueuesMapType {}
+declare module '@lavoro/core' {
+  export interface QueueList extends QueueListType {}
+  export interface QueueConnections extends QueueConnectionsType {}
+  export interface ConnectionQueues extends ConnectionQueuesType {}
 }

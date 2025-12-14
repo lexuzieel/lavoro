@@ -1,0 +1,51 @@
+{
+  "name": "@lavoro/core",
+  "version": "0.3.0",
+  "type": "module",
+  "description": "A type-safe, flexible queue library for Node.js with support for multiple drivers",
+  "author": "Aleksei Ivanov <contact@aleksei.dev>",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/lexuzieel/lavoro.git",
+    "directory": "packages/core"
+  },
+  "homepage": "https://github.com/lexuzieel/lavoro#readme",
+  "bugs": {
+    "url": "https://github.com/lexuzieel/lavoro/issues"
+  },
+  "keywords": [
+    "queue",
+    "background",
+    "worker",
+    "job",
+    "scheduler"
+  ],
+  "exports": {
+    ".": {
+      "types": "./build/index.d.ts",
+      "import": "./build/index.js"
+    }
+  },
+  "main": "build/index.js",
+  "files": [
+    "build"
+  ],
+  "scripts": {
+    "check": "tsc --noEmit",
+    "build": "tsup-node",
+    "watch": "tsup-node --watch"
+  },
+  "dependencies": {
+    "@verrou/core": "^0.5.2",
+    "croner": "^9.1.0"
+  },
+  "peerDependencies": {
+    "pino": "^10.1.0"
+  },
+  "peerDependenciesMeta": {
+    "pino": {
+      "optional": true
+    }
+  }
+}

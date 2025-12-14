@@ -1,14 +1,13 @@
-import { Job, Payload } from '../contracts/job.js'
 import {
+  Job,
+  Payload,
   QueueDriver,
   QueueDriverStopOptions,
   QueueName,
-} from '../contracts/queue_driver.js'
-import {
-  PostgresQueueConnectionConfig,
+  ConfiguredDriver,
   QueueConfig,
   WorkerOptions,
-} from '../types.js'
+} from '@lavoro/core'
 
 import { Lock, LockFactory } from '@verrou/core'
 import { knexStore } from '@verrou/core/drivers/knex'
@@ -24,21 +23,26 @@ export type PostgresConfig = {
   database: string
 }
 
-export class PostgresQueueDriver extends QueueDriver {
+export class PostgresQueueDriver extends QueueDriver<PostgresConfig> {
   private boss: PgBoss
-  private postgresConfig: PostgresQueueConnectionConfig['config']
   private lockFactory?: LockFactory
   private lockKnexInstance?: ReturnType<typeof knex>
   private lockTableName: string = 'lavoro_locks'
 
   constructor(
     queueConfig: QueueConfig,
-    options: Record<QueueName, WorkerOptions>,
-    config: PostgresQueueConnectionConfig['config'],
+    options: Record<string, WorkerOptions>,
+    config?: PostgresConfig,
   ) {
-    super(queueConfig, options)
+    /**
+     * Since the config is marked optional and it is required for this driver,
+     * we check it during runtime before creating the driver.
+     */
+    if (!config) {
+      throw new Error('PostgresQueueDriver requires a config object')
+    }
 
-    this.postgresConfig = config
+    super(queueConfig, options, config)
 
     this.boss = new PgBoss({
       connectionString: `postgresql://${config.user}:${config.password}@${config.host}:${config.port}/${config.database}`,
@@ -49,11 +53,11 @@ export class PostgresQueueDriver extends QueueDriver {
     const knexInstance = knex({
       client: 'pg',
       connection: {
-        host: this.postgresConfig.host,
-        port: Number(this.postgresConfig.port),
-        user: this.postgresConfig.user,
-        password: this.postgresConfig.password,
-        database: this.postgresConfig.database,
+        host: this.driverConfig.host,
+        port: Number(this.driverConfig.port),
+        user: this.driverConfig.user,
+        password: this.driverConfig.password,
+        database: this.driverConfig.database,
       },
     })
 
@@ -357,4 +361,17 @@ export class PostgresQueueDriver extends QueueDriver {
   //     },
   //   )
   // }
+}
+
+/**
+ * Builder function for PostgresQueueDriver.
+ * Creates a driver descriptor with type-safe config.
+ */
+export function postgres(
+  config: PostgresConfig,
+): ConfiguredDriver<PostgresQueueDriver, PostgresConfig> {
+  return {
+    constructor: PostgresQueueDriver,
+    config: config,
+  }
 }

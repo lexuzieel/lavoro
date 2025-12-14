@@ -4,8 +4,7 @@ import {
   ScheduleIntervalTime,
   intervalToCron,
   parseTime,
-} from '../../src/schedule/schedule_interval.js'
-
+} from '@lavoro/core'
 import { CronExpressionOptions, CronExpressionParser } from 'cron-parser'
 import { describe, expect, test } from 'vitest'
 
