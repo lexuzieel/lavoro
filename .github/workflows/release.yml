@@ -1,61 +1,47 @@
-name: Release
+name: Auto Tag on Version Bump
 
 on:
   push:
     branches:
       - main
+    paths:
+      - 'packages/*/package.json'
 
 concurrency: ${{ github.workflow }}-${{ github.ref }}
 
 jobs:
-  release:
-    name: Release
+  tag:
+    name: Create Tag
     runs-on: ubuntu-latest
     permissions:
       contents: write
-      pull-requests: write
-      id-token: write
 
     steps:
       - name: Checkout Repo
         uses: actions/checkout@v4
-
-      - name: Setup Node.js
-        uses: actions/setup-node@v4
         with:
-          node-version: '20'
-          registry-url: 'https://registry.npmjs.org'
-          cache: 'npm'
+          fetch-depth: 2
 
-      - name: Install Dependencies
-        run: npm ci
+      - name: Check if version changed
+        id: version_check
+        run: |
+          VERSION=$(node -p "require('./packages/core/package.json').version")
+          echo "current_version=$VERSION" >> $GITHUB_OUTPUT
 
-      - name: Build packages
-        run: npm run build
+          # Check if tag exists
+          if git rev-parse "v$VERSION" >/dev/null 2>&1; then
+            echo "should_tag=false" >> $GITHUB_OUTPUT
+            echo "Tag v$VERSION already exists"
+          else
+            echo "should_tag=true" >> $GITHUB_OUTPUT
+            echo "New version v$VERSION detected, will create tag"
+          fi
 
-      - name: Create Release Pull Request or Publish to npm
-        id: changesets
-        uses: changesets/action@v1
-        with:
-          publish: npx changeset publish --provenance
-          version: npx changeset version
-          commit: 'chore: version packages'
-          title: 'chore: version packages'
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          # Use OIDC for npm authentication instead of NPM_TOKEN
-          NPM_TOKEN: '' # https://github.com/changesets/changesets/issues/1152#issuecomment-3190884868
-
-      - name: Create GitHub Release
-        if: steps.changesets.outputs.published == 'true'
-        uses: softprops/action-gh-release@v2
-        with:
-          tag_name:
-            v${{ fromJson(steps.changesets.outputs.publishedPackages)[0].version
-            }}
-          name:
-            Release v${{
-            fromJson(steps.changesets.outputs.publishedPackages)[0].version }}
-          generate_release_notes: true
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      - name: Create and push tag
+        if: steps.version_check.outputs.should_tag == 'true'
+        run: |
+          VERSION=${{ steps.version_check.outputs.current_version }}
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git tag -a "v$VERSION" -m "Release v$VERSION"
+          git push origin "v$VERSION"
