@@ -8,27 +8,25 @@ import type { LockFactory } from '@verrou/core'
  * Interface to be augmented by users to define their queue names.
  * This enables type-safe queue names throughout the application.
  */
-export interface QueuesList {}
+export interface QueueList {}
 
 /**
  * Interface to be augmented by users to map connections to their queue names.
  * This enables connection-specific type-safe queue names.
  */
-export interface ConnectionQueuesMap {}
+export interface ConnectionQueues {}
 
 /**
- * Extract queue names from QueuesList.
+ * Extract queue names from QueueList.
  * Defaults to string if no queues are defined.
  */
-export type QueueName = keyof QueuesList extends never
-  ? string
-  : keyof QueuesList
+export type QueueName = keyof QueueList extends never ? string : keyof QueueList
 
 /**
- * Extract queue names for a specific connection from ConnectionQueuesMap.
+ * Extract queue names for a specific connection from ConnectionQueues.
  */
 export type QueueNameForConnection<C extends QueueConnectionName> =
-  C extends keyof ConnectionQueuesMap ? ConnectionQueuesMap[C] : QueueName
+  C extends keyof ConnectionQueues ? ConnectionQueues[C] : QueueName
 
 export type QueueDriverStopOptions = {
   /**
@@ -61,7 +59,7 @@ export abstract class QueueDriver<
 
   constructor(
     protected config: QueueConfig,
-    protected options: Record<QueueName, WorkerOptions>,
+    protected options: Record<string, WorkerOptions>,
     protected driverConfig: Config = {} as Config,
   ) {
     this.logger = createDefaultLogger('queue')

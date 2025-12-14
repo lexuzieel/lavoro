@@ -1,15 +1,14 @@
 import {
+  Job,
   Logger,
   Queue,
   QueueConfig,
   QueueConnectionName,
-  Schedule,
-  Job,
   QueueDriverStopOptions,
+  Schedule,
   defineConfig,
 } from '@lavoro/core'
-import { postgres, type PostgresConfig } from '@lavoro/postgres'
-
+import { type PostgresConfig, postgres } from '@lavoro/postgres'
 import {
   PostgreSqlContainer,
   StartedPostgreSqlContainer,
@@ -209,12 +208,19 @@ export class TestContext {
 
 type ConnectionNames = keyof typeof connections
 type AllQueueNames = keyof (typeof connections)[ConnectionNames]['queues']
-type ConnectionQueuesMapType = {
+
+type QueueListType = {
+  [K in AllQueueNames]: never
+}
+type QueueConnectionsType = {
+  [K in ConnectionNames]: never
+}
+type ConnectionQueuesType = {
   [K in ConnectionNames]: keyof (typeof connections)[K]['queues']
 }
 
 declare module '@lavoro/core' {
-  export interface QueueConnections extends Record<ConnectionNames, never> {}
-  export interface QueuesList extends Record<AllQueueNames, never> {}
-  export interface ConnectionQueuesMap extends ConnectionQueuesMapType {}
+  export interface QueueList extends QueueListType {}
+  export interface QueueConnections extends QueueConnectionsType {}
+  export interface ConnectionQueues extends ConnectionQueuesType {}
 }

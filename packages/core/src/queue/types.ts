@@ -111,10 +111,12 @@ export type InferDefaultConnection<T> = T extends {
  * Infer queue names from all connections
  */
 export type InferQueueNames<T> = T extends { connections: infer Connections }
-  ? Connections extends QueueConnectionsList
+  ? Connections extends Record<string, { queues: Record<string, any> }>
     ? {
-        [K in keyof Connections]: keyof Connections[K]['queues']
-      }[keyof Connections]
+        [K in {
+          [CK in keyof Connections]: keyof Connections[CK]['queues']
+        }[keyof Connections]]: never
+      }
     : never
   : never
 
@@ -125,7 +127,7 @@ export type InferQueueNamesForConnection<
   T,
   ConnectionName extends string,
 > = T extends { connections: infer Connections }
-  ? Connections extends QueueConnectionsList
+  ? Connections extends Record<string, { queues: Record<string, any> }>
     ? ConnectionName extends keyof Connections
       ? keyof Connections[ConnectionName]['queues']
       : never
@@ -136,10 +138,10 @@ export type InferQueueNamesForConnection<
  * Infer the connection-to-queues mapping from the config
  * Returns a mapped type where each connection name maps to its queue names
  */
-export type InferConnectionQueuesMap<T> = T extends {
+export type InferConnectionQueues<T> = T extends {
   connections: infer Connections
 }
-  ? Connections extends QueueConnectionsList
+  ? Connections extends Record<string, { queues: Record<string, any> }>
     ? {
         [K in keyof Connections]: keyof Connections[K]['queues']
       }

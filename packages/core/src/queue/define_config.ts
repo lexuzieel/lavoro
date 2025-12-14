@@ -39,9 +39,14 @@ type QueueConfigWithConnections<Connections, Connection> = QueueConfig & {
  *
  * const queueConfig = defineConfig(config)
  *
- * // Type augmentation happens automatically via InferQueueNames
- * declare module 'lavoro' {
- *   interface QueuesList extends Record<InferQueueNames<typeof config>, never> {}
+ * // Type augmentation to enable type-safe queue names
+ * declare module '@lavoro/core' {
+ *   interface QueueList extends InferQueueNames<typeof config> {}
+ *   interface DefaultConnection {
+ *     name: InferDefaultConnection<typeof config>
+ *   }
+ *   interface QueueConnections extends InferConnections<typeof config> {}
+ *   interface ConnectionQueues extends InferConnectionQueues<typeof config> {}
  * }
  * ```
  *

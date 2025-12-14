@@ -1,7 +1,6 @@
 import {
   QueueDriver,
   QueueDriverConfig,
-  QueueName,
   ConfiguredDriver,
   QueueConfig,
   WorkerOptions,
@@ -13,7 +12,7 @@ import { memoryStore } from '@verrou/core/drivers/memory'
 export class MemoryQueueDriver extends QueueDriver {
   constructor(
     queueConfig: QueueConfig,
-    options: Record<QueueName, WorkerOptions>,
+    options: Record<string, WorkerOptions>,
     config: QueueDriverConfig = {},
   ) {
     super(queueConfig, options, config)

@@ -31,7 +31,7 @@ export class PostgresQueueDriver extends QueueDriver<PostgresConfig> {
 
   constructor(
     queueConfig: QueueConfig,
-    options: Record<QueueName, WorkerOptions>,
+    options: Record<string, WorkerOptions>,
     config?: PostgresConfig,
   ) {
     /**

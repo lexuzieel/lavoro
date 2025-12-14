@@ -8,7 +8,7 @@ export { Queue } from './queue/queue.js'
 
 export {
   QueueDriver,
-  type QueuesList,
+  type QueueList,
   type ConnectionQueuesMap,
 } from './queue/contracts/queue_driver.js'
 export { memory, type MemoryQueueDriver } from './queue/drivers/memory.js'

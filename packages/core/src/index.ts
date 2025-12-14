@@ -14,8 +14,8 @@ export {
   QueueDriver,
   type QueueDriverConfig,
   type QueueDriverStopOptions,
-  type QueuesList,
-  type ConnectionQueuesMap,
+  type QueueList,
+  type ConnectionQueues,
   type QueueName,
   type QueueNameForConnection,
 } from './queue/contracts/queue_driver.js'
