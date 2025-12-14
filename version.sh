@@ -42,9 +42,14 @@ npx changeset version
 # Get the new version
 VERSION=$(node -p "require('./packages/core/package.json').version")
 
+git add packages/**/package.json
+git add packages/**/CHANGELOG.md
+git commit $VERSION
+
 echo "Creating tag v$VERSION..."
-git tag -a "v$VERSION" -m "Release v$VERSION"
-git push --tags
+git tag -a "v$VERSION" -m "v$VERSION"
+
+git push && git push --tags
 
 echo ""
 echo "✅ Versions bumped and tagged as v$VERSION!"
