@@ -44,7 +44,7 @@ VERSION=$(node -p "require('./packages/core/package.json').version")
 
 git add packages/**/package.json
 git add packages/**/CHANGELOG.md
-git commit $VERSION
+git commit -m "$VERSION"
 
 echo "Creating tag v$VERSION..."
 git tag -a "v$VERSION" -m "v$VERSION"
