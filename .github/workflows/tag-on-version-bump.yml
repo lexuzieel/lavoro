@@ -1,4 +1,4 @@
-name: Auto Tag on Version Bump
+name: Auto-tag on version bump
 
 on:
   push:
@@ -11,13 +11,13 @@ concurrency: ${{ github.workflow }}-${{ github.ref }}
 
 jobs:
   tag:
-    name: Create Tag
+    name: Create tag
     runs-on: ubuntu-latest
     permissions:
       contents: write
 
     steps:
-      - name: Checkout Repo
+      - name: Checkout repository
         uses: actions/checkout@v4
         with:
           fetch-depth: 2
