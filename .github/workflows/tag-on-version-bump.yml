@@ -54,6 +54,27 @@ jobs:
           echo "tag=$TAG" >> $GITHUB_OUTPUT
           echo "version=$VERSION" >> $GITHUB_OUTPUT
 
+      - name: Extract changelog for version
+        id: changelog
+        run: |
+          VERSION=${{ steps.version.outputs.version }}
+
+          # Extract the section for this version from CHANGELOG.md
+          if [ -f CHANGELOG.md ]; then
+            # Get content between [VERSION] and next version or end
+            CONTENT=$(awk "/^## \[$VERSION\]/,/^## \[/{if(/^## \[/ && !/^## \[$VERSION\]/)exit;print}" CHANGELOG.md | sed '1d')
+            
+            # If no specific version found, use a default message
+            if [ -z "$CONTENT" ]; then
+              CONTENT="Release $VERSION"
+            fi
+            
+            # Save to file to preserve formatting
+            echo "$CONTENT" > release_notes.md
+          else
+            echo "Release $VERSION" > release_notes.md
+          fi
+
       - name: Create GitHub Release
         uses: softprops/action-gh-release@v2
         with:
