@@ -39,5 +39,12 @@ EOF
 echo "Bumping versions..."
 npx changeset version
 
+# Get the new version
+VERSION=$(node -p "require('./packages/core/package.json').version")
+
+echo "Creating tag v$VERSION..."
+git tag -a "v$VERSION" -m "Release v$VERSION"
+
 echo ""
-echo "✅ Versions bumped! Review the changes and run ./release.sh to publish"
+echo "✅ Versions bumped and tagged as v$VERSION!"
+echo "   Review the changes and push to main with: git push && git push --tags"
