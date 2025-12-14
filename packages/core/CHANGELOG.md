@@ -1,5 +1,11 @@
 # @lavoro/core
 
+## 0.3.12
+
+### Patch Changes
+
+- Release patch version
+
 ## 0.3.11
 
 ### Patch Changes
