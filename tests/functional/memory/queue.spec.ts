@@ -49,7 +49,7 @@ describe(
       await waitForMutex('test-job')
     })
 
-    test.skip('should be able to dispatch a job onto any registered connection and queue', async () => {
+    test('should be able to dispatch a job onto any registered connection and queue', async () => {
       // default connection and queue
       acquireMutex('test-job')
       await TestJob.dispatch({ arg1: 'hello', arg2: 1 })
