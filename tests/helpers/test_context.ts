@@ -8,6 +8,7 @@ import {
   Schedule,
   defineConfig,
 } from '@lavoro/core'
+import { memory } from '@lavoro/memory'
 import { type PostgresConfig, postgres } from '@lavoro/postgres'
 import {
   PostgreSqlContainer,
@@ -115,6 +116,9 @@ export class TestContext {
 
           const pgConfig = this.getPostgresConfig()
           return postgres(pgConfig)
+        }
+        case 'memory': {
+          return memory()
         }
         default: {
           throw new Error(`Unsupported driver: ${driverType}`)
