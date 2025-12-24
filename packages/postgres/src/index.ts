@@ -25,7 +25,6 @@ export type PostgresConfig = {
 
 export class PostgresQueueDriver extends QueueDriver<PostgresConfig> {
   private boss: PgBoss
-  private lockFactory?: LockFactory
   private lockKnexInstance?: ReturnType<typeof knex>
   private lockTableName: string = 'lavoro_locks'
 
