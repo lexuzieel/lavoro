@@ -19,9 +19,11 @@ export {
   type QueueName,
   type QueueNameForConnection,
 } from './queue/contracts/queue_driver.js'
+export { type QueueDriverEvents } from './queue/contracts/queue_driver_event_emitter.js'
 
 // Export queue orchestration
 export { Queue } from './queue/queue.js'
+export { type QueueEvents } from './queue/queue_event_emitter.js'
 export { PendingDispatch } from './queue/pending_dispatch.js'
 
 // Export schedule functionality

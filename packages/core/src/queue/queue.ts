@@ -6,6 +6,7 @@ import {
   QueueDriverStopOptions,
   QueueName,
 } from './contracts/queue_driver.js'
+import { QueueEventEmitter } from './queue_event_emitter.js'
 import type {
   QueueConfig,
   QueueConnectionConfig,
@@ -14,7 +15,7 @@ import type {
 
 import type { LockFactory } from '@verrou/core'
 
-export class Queue {
+export class Queue extends QueueEventEmitter {
   private drivers: Map<QueueConnectionName, QueueDriver> = new Map()
   private started: boolean = false
   private logger: Logger
@@ -22,6 +23,8 @@ export class Queue {
   private lockFactories: Map<QueueConnectionName, LockFactory> = new Map()
 
   constructor(private config: QueueConfig & { logger?: Logger }) {
+    super()
+
     this.logger = config?.logger || createDefaultLogger('queue')
 
     for (const [connection, driverConfig] of Object.entries(
@@ -35,8 +38,20 @@ export class Queue {
       const driver = this.createDriver(driverConfig)
       driver.connection = connection as QueueConnectionName
 
+      this.bindEvents(driver)
+
       this.drivers.set(driver.connection, driver)
     }
+  }
+
+  /**
+   * Bind all queue driver events and
+   * proxy them through the queue service.
+   */
+  private bindEvents(driver: QueueDriver) {
+    driver.on('error', (job, error, payload) => {
+      this.emit('error', job, error, payload)
+    })
   }
 
   private createDriver(
@@ -140,13 +155,13 @@ export class Queue {
 
     this.scheduledJobs.clear()
 
+    for (const job of this.config.jobs) {
+      await this.unregister(job)
+    }
+
     for (const [connection, driver] of this.drivers) {
       this.logger.trace({ connection }, 'Stopping queue connection')
       await driver.stop(options)
-    }
-
-    for (const job of this.config.jobs) {
-      await this.unregister(job)
     }
 
     /**
