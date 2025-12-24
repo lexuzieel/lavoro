@@ -55,6 +55,8 @@ export abstract class QueueDriver<
 
   protected registeredJobs: Map<string, new () => Job> = new Map()
 
+  protected lockFactory?: LockFactory
+
   public connection: QueueConnectionName | undefined
 
   constructor(
