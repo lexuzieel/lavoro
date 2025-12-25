@@ -26,3 +26,5 @@ node_modules/
 *.log
 .DS_Store
 
+# Docs
+docs/
