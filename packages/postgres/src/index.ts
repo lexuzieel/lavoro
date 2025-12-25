@@ -1,14 +1,13 @@
 import {
+  ConfiguredDriver,
   Job,
   Payload,
+  QueueConfig,
   QueueDriver,
   QueueDriverStopOptions,
   QueueName,
-  ConfiguredDriver,
-  QueueConfig,
   WorkerOptions,
 } from '@lavoro/core'
-
 import { Lock, LockFactory } from '@verrou/core'
 import { knexStore } from '@verrou/core/drivers/knex'
 import type { SerializedLock } from '@verrou/core/types'
@@ -123,7 +122,6 @@ export class PostgresQueueDriver extends QueueDriver<PostgresConfig> {
             try {
               await this.processJob(job)
             } catch (error) {
-              // TODO: Add a way to signal about the error
               this.logger.warn(
                 {
                   connection: this.connection,
@@ -131,8 +129,10 @@ export class PostgresQueueDriver extends QueueDriver<PostgresConfig> {
                   job: job.name,
                   err: error,
                 },
-                'Job failed',
+                'Got error while processing the job',
               )
+
+              this.emit('error', error)
 
               await this.boss.fail(job.name, job.id, error)
             }
@@ -231,6 +231,8 @@ export class PostgresQueueDriver extends QueueDriver<PostgresConfig> {
      */
     try {
       await jobInstance.handle(job.data)
+    } catch (error) {
+      this.emit('job:error', error, jobInstance, job.data)
     } finally {
       /**
        * If we previously acquired a lock for
