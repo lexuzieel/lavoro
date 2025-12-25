@@ -160,5 +160,58 @@ describe(
 
       expect(error?.message).toBe('error thrown inside the job')
     })
+
+    test('should throw when trying to enqueue for non-existent worker', async () => {
+      const queue: any = ctx.getQueue()
+
+      // Clear all fastq queues inside the memory driver so
+      // `this.queues.get(job.fullyQualifiedName)` returns undefined.
+      queue.drivers.get('main').queues.clear()
+
+      await expect(
+        TestJob.dispatch({ arg1: 'hello', arg2: 1 }),
+      ).rejects.toThrow('No worker found for job: default_TestJob')
+    })
+
+    test('should throw when trying to enqueue in a pausing or stopped queue', async () => {
+      const queue: any = ctx.getQueue()
+
+      const driver = queue.drivers.get('main')
+
+      const timeout = 1000
+
+      /**
+       * Simulate a running job that runs shorter than the timeout.
+       */
+      driver.state.runningJobCount++
+      setTimeout(() => {
+        driver.state.runningJobCount--
+      }, timeout / 2)
+
+      const queues = Array.from(driver.queues.values())
+
+      /**
+       * This puts the driver into `pausing` state and makes
+       * it wait for currently running jobs to finish.
+       */
+      driver.waitForQueues(queues, timeout)
+
+      await expect(
+        TestJob.dispatch({ arg1: 'hello', arg2: 1 }),
+      ).rejects.toThrow(
+        'Queue driver is shutting down and cannot accept new jobs',
+      )
+
+      /**
+       * Simulate queue driver being stopped.
+       * We don't directly call stop() as not
+       * to unregister jobs.
+       */
+      queue.drivers.get('main').state.isStarted = false
+
+      await expect(
+        TestJob.dispatch({ arg1: 'hello', arg2: 1 }),
+      ).rejects.toThrow('Queue driver is not started')
+    })
   },
 )
