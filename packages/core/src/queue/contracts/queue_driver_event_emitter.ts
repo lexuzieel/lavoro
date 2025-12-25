@@ -24,6 +24,15 @@ export abstract class QueueDriverEventEmitter extends EventEmitter {
     event: K,
     ...args: QueueDriverEvents[K]
   ): boolean {
+    /**
+     * Avoid throwing error even if there are no listeners
+     * for the `error` event (special case, see:
+     * https://nodejs.org/api/events.html#error-events).
+     */
+    if (this.listenerCount(event) === 0) {
+      return false
+    }
+
     return super.emit(event, ...args)
   }
 }
