@@ -23,6 +23,7 @@ export {
   type ConnectionQueues,
   type QueueName,
   type QueueNameForConnection,
+  type ProcessJobParams,
 } from './queue/contracts/queue_driver.js'
 export { type QueueDriverEvents } from './queue/contracts/queue_driver_event_emitter.js'
 
