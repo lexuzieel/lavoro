@@ -7,8 +7,13 @@ import { randomUUID } from 'node:crypto'
 
 export type Payload<T extends Job> = T extends Job<infer P> ? P : unknown
 
+export type PayloadLock = {
+  ttl: number
+  serializedLock: SerializedLock
+}
+
 export type PayloadWithLock<T extends Job, P extends Payload<T>> = P & {
-  _lock?: SerializedLock
+  _lock?: PayloadLock
 }
 
 export type Options = {

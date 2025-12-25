@@ -9,7 +9,12 @@ export { Logger, createDefaultLogger } from './logger.js'
 export { defineConfig } from './queue/define_config.js'
 
 // Export core contracts
-export { Job, type Payload } from './queue/contracts/job.js'
+export {
+  Job,
+  type Payload,
+  type PayloadWithLock,
+  type PayloadLock,
+} from './queue/contracts/job.js'
 export {
   QueueDriver,
   type QueueDriverConfig,
@@ -28,7 +33,10 @@ export { PendingDispatch } from './queue/pending_dispatch.js'
 
 // Export schedule functionality
 export { Schedule, defaultScheduleLockProvider } from './schedule/schedule.js'
-export { PendingSchedule, getDistributedLockKey } from './schedule/pending_schedule.js'
+export {
+  PendingSchedule,
+  getDistributedLockKey,
+} from './schedule/pending_schedule.js'
 export { PendingJobSchedule } from './schedule/pending_job_schedule.js'
 export { ScheduleRegistry } from './schedule/schedule_registry.js'
 export {
