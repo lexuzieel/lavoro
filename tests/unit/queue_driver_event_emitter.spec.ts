@@ -11,8 +11,8 @@ class TestQueueDriver extends QueueDriver {
     return {} as LockFactory
   }
 
-  emitError(job: Job, error: Error, payload: unknown): void {
-    this.emit('error', job, error, payload)
+  emitError(error: Error, job: Job, payload: unknown): void {
+    this.emit('job:error', error, job, payload)
   }
 }
 
@@ -46,7 +46,7 @@ describe('QueueDriverEventEmitter', () => {
     const job = new TestJob()
     job.options.queue = 'default'
 
-    expect(() => driver.emitError(job, new Error('test'), {})).not.toThrow()
+    expect(() => driver.emitError(new Error('test'), job, {})).not.toThrow()
 
     await queue.stop()
   })
@@ -56,16 +56,16 @@ describe('QueueDriverEventEmitter', () => {
     await queue.start()
 
     const listener = vi.fn()
-    queue.on('error', listener)
+    queue.on('job:error', listener)
 
     const driver = (queue as any).drivers.get('main') as TestQueueDriver
     const job = new TestJob()
     job.options.queue = 'default'
 
-    driver.emitError(job, new Error('test'), { message: 'payload' })
+    driver.emitError(new Error('test'), job, { message: 'payload' })
 
     expect(listener).toHaveBeenCalledTimes(1)
-    expect(listener.mock.calls[0][1].message).toBe('test')
+    expect(listener.mock.calls[0][0].message).toBe('test')
 
     await queue.stop()
   })

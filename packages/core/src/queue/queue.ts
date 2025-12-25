@@ -49,8 +49,12 @@ export class Queue extends QueueEventEmitter {
    * proxy them through the queue service.
    */
   private bindEvents(driver: QueueDriver) {
-    driver.on('error', (job, error, payload) => {
-      this.emit('error', job, error, payload)
+    driver.on('error', (error) => {
+      this.emit('error', error)
+    })
+
+    driver.on('job:error', (error, job, payload) => {
+      this.emit('job:error', error, job, payload)
     })
   }
 

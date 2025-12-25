@@ -31,6 +31,12 @@ class SlowJob extends Job {
   }
 }
 
+class JobWithError extends Job {
+  public async handle(payload: { error: string }): Promise<void> {
+    throw new Error(payload.error)
+  }
+}
+
 describe(
   'Queue service (Memory)',
   {
@@ -39,7 +45,7 @@ describe(
   () => {
     const ctx = new TestContext()
 
-    ctx.setup([TestJob, SlowJob], 'memory', {
+    ctx.setup([TestJob, SlowJob, JobWithError], 'memory', {
       worker: true,
     })
 
@@ -137,6 +143,22 @@ describe(
 
       // Force stop so afterEach doesn't hang
       await ctx.stopQueue({ graceful: false })
+    })
+
+    test('should emit error event when job throws', async () => {
+      const queue = ctx.getQueue()
+
+      let error: Error | undefined
+
+      queue.on('job:error', (err, job) => {
+        if (job.name == 'JobWithError') {
+          error = err
+        }
+      })
+
+      await JobWithError.dispatch({ error: 'error thrown inside the job' })
+
+      expect(error?.message).toBe('error thrown inside the job')
     })
   },
 )

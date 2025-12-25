@@ -6,7 +6,8 @@ import { EventEmitter } from 'stream'
  * Type-safe queue driver events.
  */
 export interface QueueDriverEvents {
-  error: [job: Job, error: Error, payload: unknown]
+  error: [error: Error]
+  'job:error': [error: Error, job: Job, payload: unknown]
 }
 
 /**

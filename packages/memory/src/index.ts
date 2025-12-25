@@ -350,15 +350,7 @@ export class MemoryQueueDriver extends QueueDriver {
     }
 
     q.push({ job, payload }).catch((error) => {
-      this.logger.error(
-        {
-          connection: this.connection,
-          queue: job.options.queue,
-          job: job.name,
-          err: error,
-        },
-        'Failed to enqueue job',
-      )
+      this.emit('job:error', error, job, payload)
     })
   }
 }
