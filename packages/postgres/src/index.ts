@@ -1,16 +1,17 @@
 import {
-  ConfiguredDriver,
   Job,
   Payload,
-  PayloadLock,
-  QueueConfig,
   QueueDriver,
   QueueDriverStopOptions,
   QueueName,
+  ConfiguredDriver,
+  QueueConfig,
   WorkerOptions,
 } from '@lavoro/core'
+
 import { Lock, LockFactory } from '@verrou/core'
 import { knexStore } from '@verrou/core/drivers/knex'
+import type { SerializedLock } from '@verrou/core/types'
 import knex from 'knex'
 import { PgBoss, Job as PgBossJob } from 'pg-boss'
 
@@ -203,10 +204,9 @@ export class PostgresQueueDriver extends QueueDriver<PostgresConfig> {
      * This will prevent the job from being scheduled
      * while it is being processed.
      */
-    const jobLock = (job.data as any)?._lock as PayloadLock | undefined
-
-    const ttl = jobLock?.ttl
-    const serializedLock = jobLock?.serializedLock
+    const serializedLock = (job.data as any)?._lock as
+      | SerializedLock
+      | undefined
 
     let lock: Lock | undefined
 
@@ -215,16 +215,8 @@ export class PostgresQueueDriver extends QueueDriver<PostgresConfig> {
         lock = this.lockFactory.restoreLock(serializedLock)
         await lock.acquireImmediately()
 
-        if (ttl) {
-          await lock.extend(ttl)
-        }
-
         this.logger.trace(
-          {
-            job: name,
-            id: job.id,
-            jobLock,
-          },
+          { job: name, id: job.id, lock: serializedLock },
           'Restored lock from scheduler',
         )
       } catch (error) {
