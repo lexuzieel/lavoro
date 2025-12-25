@@ -2,6 +2,7 @@ import {
   ConfiguredDriver,
   Job,
   Payload,
+  PayloadLock,
   QueueConfig,
   QueueDriver,
   QueueDriverConfig,
@@ -11,7 +12,6 @@ import {
 } from '@lavoro/core'
 import { Lock, LockFactory } from '@verrou/core'
 import { memoryStore } from '@verrou/core/drivers/memory'
-import { SerializedLock } from '@verrou/core/types'
 import * as fastq from 'fastq'
 import type { queueAsPromised } from 'fastq'
 
@@ -161,7 +161,10 @@ export class MemoryQueueDriver extends QueueDriver {
      * This will prevent the job from being scheduled
      * while it is being processed.
      */
-    const serializedLock = payload?._lock as SerializedLock | undefined
+    const jobLock = (payload as any)?._lock as PayloadLock | undefined
+
+    const ttl = jobLock?.ttl
+    const serializedLock = jobLock?.serializedLock
 
     let lock: Lock | undefined
 
@@ -170,8 +173,16 @@ export class MemoryQueueDriver extends QueueDriver {
         lock = this.lockFactory.restoreLock(serializedLock)
         await lock.acquireImmediately()
 
+        if (ttl) {
+          await lock.extend(ttl)
+        }
+
         this.logger.trace(
-          { job: name, id: job.id, lock: serializedLock },
+          {
+            job: name,
+            id: job.id,
+            jobLock,
+          },
           'Restored lock from scheduler',
         )
       } catch (error) {
