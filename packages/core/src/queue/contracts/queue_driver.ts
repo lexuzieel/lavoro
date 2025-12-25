@@ -1,6 +1,7 @@
 import { Logger, createDefaultLogger } from '../../logger.js'
 import { QueueConfig, QueueConnectionName, WorkerOptions } from '../types.js'
 import { Job, Payload } from './job.js'
+import { QueueDriverEventEmitter } from './queue_driver_event_emitter.js'
 
 import type { LockFactory } from '@verrou/core'
 
@@ -48,7 +49,7 @@ export type QueueDriverConfig = {}
 
 export abstract class QueueDriver<
   Config extends QueueDriverConfig = QueueDriverConfig,
-> {
+> extends QueueDriverEventEmitter {
   protected logger: Logger
 
   protected registeredQueues: Set<string> = new Set()
@@ -64,6 +65,7 @@ export abstract class QueueDriver<
     protected options: Record<string, WorkerOptions>,
     protected driverConfig: Config = {} as Config,
   ) {
+    super()
     this.logger = createDefaultLogger('queue')
   }
 
