@@ -9,9 +9,8 @@ import {
   QueueName,
   WorkerOptions,
 } from '@lavoro/core'
-import { Lock, LockFactory } from '@verrou/core'
+import { LockFactory } from '@verrou/core'
 import { memoryStore } from '@verrou/core/drivers/memory'
-import { SerializedLock } from '@verrou/core/types'
 import * as fastq from 'fastq'
 import type { queueAsPromised } from 'fastq'
 
@@ -111,113 +110,11 @@ export class MemoryQueueDriver extends QueueDriver {
   private async processJob(data: any): Promise<void> {
     const { job, payload }: { job: Job; payload: any } = data
 
-    const { queue, name } = Job.parseName(job.fullyQualifiedName)
-
-    if (!queue || !name) {
-      const error = new Error(`Invalid job class name: ${job.name}`)
-      this.logger.warn(error)
-      throw error
-    }
-
-    this.logger.trace({ job: name }, 'Processing job')
-
-    try {
-      this.checkIfJobIsRegistered(name)
-    } catch (error) {
-      this.logger.warn(error.message)
-      throw error
-    }
-
-    const jobClass = this.registeredJobs.get(name)
-
-    if (!jobClass) {
-      const error = new Error(`Job is not registered: ${name}`)
-      this.logger.warn(error)
-      throw error
-    }
-
-    const jobInstance = new jobClass()
-
-    jobInstance.connection = this.connection
-    jobInstance.queue = queue
-    jobInstance.id = job.id
-
-    // TODO: Make this pretty
-
-    this.logger.debug(
-      {
-        connection: this.connection,
-        queue,
-        job: name,
-        id: job.id,
-      },
-      'Processing job',
-    )
-
-    /**
-     * A job might have been scheduled by the scheduler,
-     * in which case we need to restore the lock from the payload.
-     *
-     * This will prevent the job from being scheduled
-     * while it is being processed.
-     */
-    const serializedLock = payload?._lock as SerializedLock | undefined
-
-    let lock: Lock | undefined
-
-    if (serializedLock !== undefined && this.lockFactory !== undefined) {
-      try {
-        lock = this.lockFactory.restoreLock(serializedLock)
-        await lock.acquireImmediately()
-
-        this.logger.trace(
-          { job: name, id: job.id, lock: serializedLock },
-          'Restored lock from scheduler',
-        )
-      } catch (error) {
-        this.logger.warn(
-          { job: name, id: job.id, error },
-          'Failed to restore lock',
-        )
-      }
-    }
-
-    /**
-     * Next, we process the actual job.
-     */
-    try {
-      await jobInstance.handle(payload)
-    } finally {
-      /**
-       * If we previously acquired a lock for
-       * this job, we need to release it here.
-       */
-      if (lock) {
-        try {
-          await lock.forceRelease()
-
-          this.logger.trace(
-            { job: name, id: job.id, lock: lock.serialize() },
-            'Released lock for scheduled job',
-          )
-        } catch (error) {
-          this.logger.warn(
-            { job: name, id: job.id, error },
-            'Failed to release lock',
-          )
-        }
-      }
-    }
-
-    this.logger.trace(
-      {
-        connection: this.connection,
-        queue,
-        job: name,
-        id: job.id,
-      },
-      'Job completed',
-    )
+    await this.process({
+      id: job.id,
+      fullyQualifiedName: job.fullyQualifiedName,
+      payload,
+    })
   }
 
   public async listen(

@@ -1,9 +1,15 @@
 import { Logger, createDefaultLogger } from '../../logger.js'
 import { QueueConfig, QueueConnectionName, WorkerOptions } from '../types.js'
-import { Job, Payload } from './job.js'
+import { Job, Payload, PayloadLock } from './job.js'
 import { QueueDriverEventEmitter } from './queue_driver_event_emitter.js'
 
-import type { LockFactory } from '@verrou/core'
+import type { Lock, LockFactory } from '@verrou/core'
+
+export type ProcessJobParams = {
+  id: string
+  fullyQualifiedName: string
+  payload: unknown
+}
 
 /**
  * Interface to be augmented by users to define their queue names.
@@ -197,5 +203,126 @@ export abstract class QueueDriver<
   public async destroyLockProvider(_lockFactory: LockFactory): Promise<void> {
     // Default implementation does nothing
     // Drivers that need cleanup (e.g., Postgres with Knex) should override this
+  }
+
+  /**
+   * Execute a job with the given parameters.
+   * This method contains the common job processing logic shared by all drivers.
+   */
+  protected async process(params: ProcessJobParams): Promise<void> {
+    const { id, fullyQualifiedName, payload } = params
+    const { queue, name } = Job.parseName(fullyQualifiedName)
+
+    if (!queue || !name) {
+      const error = new Error(`Invalid job class name: ${fullyQualifiedName}`)
+      this.logger.warn(error)
+      throw error
+    }
+
+    this.logger.trace({ job: name }, 'Processing job')
+
+    try {
+      this.checkIfJobIsRegistered(name)
+    } catch (error) {
+      this.logger.warn(error)
+      throw error
+    }
+
+    const jobClass = this.registeredJobs.get(name)!
+
+    const jobInstance = new jobClass()
+
+    jobInstance.connection = this.connection
+    jobInstance.queue = queue
+    jobInstance.id = id
+
+    this.logger.debug(
+      {
+        connection: this.connection,
+        queue,
+        job: name,
+        id,
+      },
+      'Processing job',
+    )
+
+    /**
+     * A job might have been scheduled by the scheduler,
+     * in which case we need to restore the lock from the payload.
+     *
+     * This will prevent the job from being scheduled
+     * while it is being processed.
+     */
+    const jobLock = (payload as any)?._lock as PayloadLock | undefined
+
+    const ttl = jobLock?.ttl
+    const serializedLock = jobLock?.serializedLock
+
+    let lock: Lock | undefined
+
+    if (serializedLock !== undefined) {
+      if (this.lockFactory === undefined) {
+        this.logger.warn(
+          { job: name, id },
+          'Scheduled job has lock but lock factory is not available',
+        )
+      } else {
+        try {
+          lock = this.lockFactory.restoreLock(serializedLock)
+          await lock.acquireImmediately()
+
+          if (ttl) {
+            await lock.extend(ttl)
+          }
+
+          this.logger.trace(
+            {
+              job: name,
+              id,
+              jobLock,
+            },
+            'Restored lock from scheduler',
+          )
+        } catch (error) {
+          this.logger.warn({ job: name, id, error }, 'Failed to restore lock')
+        }
+      }
+    }
+
+    /**
+     * Next, we process the actual job.
+     */
+    try {
+      await jobInstance.handle(payload)
+
+      this.logger.trace(
+        {
+          connection: this.connection,
+          queue,
+          job: name,
+          id,
+        },
+        'Job completed',
+      )
+    } catch (error) {
+      this.emit('job:error', error, jobInstance, payload)
+    } finally {
+      /**
+       * If we previously acquired a lock for
+       * this job, we need to release it here.
+       */
+      if (lock) {
+        try {
+          await lock.forceRelease()
+
+          this.logger.trace(
+            { job: name, id, lock: lock.serialize() },
+            'Released lock for scheduled job',
+          )
+        } catch (error) {
+          this.logger.warn({ job: name, id, error }, 'Failed to release lock')
+        }
+      }
+    }
   }
 }
