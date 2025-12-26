@@ -224,17 +224,11 @@ export abstract class QueueDriver<
     try {
       this.checkIfJobIsRegistered(name)
     } catch (error) {
-      this.logger.warn(error.message)
-      throw error
-    }
-
-    const jobClass = this.registeredJobs.get(name)
-
-    if (!jobClass) {
-      const error = new Error(`Job is not registered: ${name}`)
       this.logger.warn(error)
       throw error
     }
+
+    const jobClass = this.registeredJobs.get(name)!
 
     const jobInstance = new jobClass()
 
@@ -266,25 +260,32 @@ export abstract class QueueDriver<
 
     let lock: Lock | undefined
 
-    if (serializedLock !== undefined && this.lockFactory !== undefined) {
-      try {
-        lock = this.lockFactory.restoreLock(serializedLock)
-        await lock.acquireImmediately()
-
-        if (ttl) {
-          await lock.extend(ttl)
-        }
-
-        this.logger.trace(
-          {
-            job: name,
-            id,
-            jobLock,
-          },
-          'Restored lock from scheduler',
+    if (serializedLock !== undefined) {
+      if (this.lockFactory === undefined) {
+        this.logger.warn(
+          { job: name, id },
+          'Scheduled job has lock but lock factory is not available',
         )
-      } catch (error) {
-        this.logger.warn({ job: name, id, error }, 'Failed to restore lock')
+      } else {
+        try {
+          lock = this.lockFactory.restoreLock(serializedLock)
+          await lock.acquireImmediately()
+
+          if (ttl) {
+            await lock.extend(ttl)
+          }
+
+          this.logger.trace(
+            {
+              job: name,
+              id,
+              jobLock,
+            },
+            'Restored lock from scheduler',
+          )
+        } catch (error) {
+          this.logger.warn({ job: name, id, error }, 'Failed to restore lock')
+        }
       }
     }
 
@@ -293,6 +294,16 @@ export abstract class QueueDriver<
      */
     try {
       await jobInstance.handle(payload)
+
+      this.logger.trace(
+        {
+          connection: this.connection,
+          queue,
+          job: name,
+          id,
+        },
+        'Job completed',
+      )
     } catch (error) {
       this.emit('job:error', error, jobInstance, payload)
     } finally {
@@ -313,15 +324,5 @@ export abstract class QueueDriver<
         }
       }
     }
-
-    this.logger.trace(
-      {
-        connection: this.connection,
-        queue,
-        job: name,
-        id,
-      },
-      'Job completed',
-    )
   }
 }
