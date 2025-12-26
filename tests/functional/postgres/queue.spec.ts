@@ -12,6 +12,13 @@ class TestJob extends Job {
   }
 }
 
+class JobWithError extends Job {
+  public async handle(payload: { error: string }): Promise<void> {
+    releaseMutex('test-job')
+    throw new Error(payload.error)
+  }
+}
+
 describe('Queue service with disabled worker (PostgreSQL)', () => {
   const ctx = new TestContext()
 
@@ -38,7 +45,7 @@ describe(
   () => {
     const ctx = new TestContext()
 
-    ctx.setup([TestJob], 'postgres', {
+    ctx.setup([TestJob, JobWithError], 'postgres', {
       worker: true,
     })
 
@@ -79,6 +86,27 @@ describe(
         .onConnection('alternative')
         .onQueue('first-queue')
       await waitForMutex('test-job')
+    })
+
+    test('should emit error event when job throws', async () => {
+      const queue = ctx.getQueue()
+
+      let error: Error | undefined
+
+      queue.on('job:error', (err, job) => {
+        if (job.name == 'JobWithError') {
+          error = err
+        }
+      })
+
+      acquireMutex('test-job')
+      await JobWithError.dispatch({ error: 'error thrown inside the job' })
+      await waitForMutex('test-job')
+
+      // Wait a bit to make sure the error has been thrown
+      await new Promise((resolve) => setTimeout(resolve, 100))
+
+      expect(error?.message).toBe('error thrown inside the job')
     })
   },
 )

@@ -20,6 +20,11 @@ export const getDistributedLockKey = (name: string) => {
   return `lavoro:schedule:${hash}`
 }
 
+/**
+ * Minimal initial lock TTL which helps avoid scheduler race conditions
+ */
+const initialTTL: Duration = '5s'
+
 export class PendingSchedule {
   protected cronPattern?: string
 
@@ -48,14 +53,21 @@ export class PendingSchedule {
     handOff: boolean
   } = {
     key: getDistributedLockKey,
-    ttl: '1m', // TODO: Decide on a default TTL
+    /**
+     * Interval during which the lock is held for the job
+     * and no other instances of it will not be scheduled
+     */
+    ttl: '5m',
     overlap: false,
     handOff: false,
   }
 
   constructor(
     protected name: string,
-    protected cb: (serializedLock?: SerializedLock) => MaybePromise<void>,
+    protected cb: (lock?: {
+      ttl: number
+      serializedLock: SerializedLock
+    }) => MaybePromise<void>,
     protected lockProviderResolver: () => LockFactory,
   ) {}
 
@@ -192,11 +204,10 @@ export class PendingSchedule {
         // First, we create a distributed lock based on the task name,
         // which ensures that only one instance of the task runs at a time.
         const key = this.distributedLockOptions.key(this.name)
-        const ttl = this.distributedLockOptions.ttl
 
         // Resolve lock provider instance and create the lock.
         const lockProvider = this.lockProviderResolver()
-        const lock = lockProvider.createLock(key, ttl)
+        const lock = lockProvider.createLock(key, initialTTL)
 
         // If the lock is already locked, we skip the execution.
         // if (await lock.isLocked()) {
@@ -217,8 +228,10 @@ export class PendingSchedule {
           // Otherwise we just run the task and then release
           // the lock immediately.
           if (this.distributedLockOptions.handOff) {
-            await this.cb(lock.serialize())
-            // await lock.release()
+            await this.cb({
+              ttl: this.distributedLockOptions.ttl as number,
+              serializedLock: lock.serialize(),
+            })
           } else {
             await this.cb()
             await lock.forceRelease()
@@ -228,8 +241,6 @@ export class PendingSchedule {
           // the lock and re-throw the error.
           await lock.forceRelease()
           throw error
-        } finally {
-          // await lock.release()
         }
       }),
     )
