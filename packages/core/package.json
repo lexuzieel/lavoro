@@ -44,6 +44,7 @@
     "watch": "tsup-node --watch"
   },
   "dependencies": {
+    "@lukeed/ms": "^2.0.2",
     "@verrou/core": "^0.5.2",
     "croner": "^9.1.0"
   },

@@ -13,7 +13,6 @@ export {
   Job,
   type Payload,
   type PayloadWithLock,
-  type PayloadLock,
 } from './queue/contracts/job.js'
 export {
   QueueDriver,
