@@ -154,6 +154,87 @@ describe(
       await ctx.stopQueue({ graceful: false })
     })
 
+    test('should emit start and finish events for job lifecycle', async () => {
+      const queue = ctx.getQueue()
+
+      let startEvent: { job: Job; payload: unknown } | undefined
+      let finishEvent: { job: Job; payload: unknown; elapsed: number } | undefined
+
+      queue.on('job:start', (job, payload) => {
+        if (job.name === 'SlowJob') {
+          startEvent = { job, payload }
+        }
+      })
+
+      queue.on('job:finish', (job, payload, elapsed) => {
+        if (job.name === 'SlowJob') {
+          finishEvent = { job, payload, elapsed }
+        }
+      })
+
+      acquireMutex('slow-job')
+      await SlowJob.dispatch({ duration: 500 })
+      await waitForMutex('slow-job')
+
+      expect(startEvent).toBeDefined()
+      expect(startEvent?.job.name).toBe('SlowJob')
+      expect(startEvent?.payload).toEqual({ duration: 500 })
+
+      expect(finishEvent).toBeDefined()
+      expect(finishEvent?.job.name).toBe('SlowJob')
+      expect(finishEvent?.elapsed).toBeGreaterThanOrEqual(500)
+    })
+
+    test('should emit complete event only on success, finish event always', async () => {
+      const queue = ctx.getQueue()
+
+      let completeEvent: { job: Job; payload: unknown; elapsed: number } | undefined
+      let finishEvent: { job: Job; payload: unknown; elapsed: number } | undefined
+
+      queue.on('job:complete', (job, payload, elapsed) => {
+        if (job.name === 'JobWithError') {
+          completeEvent = { job, payload, elapsed }
+        }
+      })
+
+      queue.on('job:finish', (job, payload, elapsed) => {
+        if (job.name === 'JobWithError') {
+          finishEvent = { job, payload, elapsed }
+        }
+      })
+
+      await JobWithError.dispatch({ error: 'test error' })
+
+      expect(completeEvent).toBeUndefined()
+      expect(finishEvent).toBeDefined()
+      expect(finishEvent?.job.name).toBe('JobWithError')
+    })
+
+    test('should allow removing event listeners with off()', async () => {
+      const queue = ctx.getQueue()
+
+      let callCount = 0
+      const listener = () => {
+        callCount++
+      }
+
+      queue.on('job:finish', listener)
+
+      acquireMutex('slow-job')
+      await SlowJob.dispatch({ duration: 100 })
+      await waitForMutex('slow-job')
+
+      expect(callCount).toBe(1)
+
+      queue.off('job:finish', listener)
+
+      acquireMutex('slow-job')
+      await SlowJob.dispatch({ duration: 100 })
+      await waitForMutex('slow-job')
+
+      expect(callCount).toBe(1)
+    })
+
     test('should emit error event when job throws', async () => {
       const queue = ctx.getQueue()
 
@@ -173,8 +254,16 @@ describe(
     test('should emit progress events for each job separately', async () => {
       const queue = ctx.getQueue()
       const progressByJob = new Map<string, ProgressEvent[]>()
+      const trackedJobIds = new Set<string>()
+
+      queue.on('job:start', (job) => {
+        if (job.name === 'SlowJob') {
+          trackedJobIds.add(job.id)
+        }
+      })
 
       queue.on('job:progress', (job, payload, elapsed) => {
+        if (!trackedJobIds.has(job.id)) return
         const events = progressByJob.get(job.id) || []
         events.push({ job, payload, elapsed })
         progressByJob.set(job.id, events)
@@ -199,6 +288,7 @@ describe(
       ])
 
       // Each job should have its own progress events
+      expect(trackedJobIds.size).toBe(2)
       expect(progressByJob.size).toBe(2)
 
       for (const events of progressByJob.values()) {

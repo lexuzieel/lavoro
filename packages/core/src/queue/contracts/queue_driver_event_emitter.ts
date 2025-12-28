@@ -7,8 +7,11 @@ import { EventEmitter } from 'stream'
  */
 export interface QueueDriverEvents {
   error: [error: Error]
-  'job:error': [error: Error, job: Job, payload: unknown]
+  'job:start': [job: Job, payload: unknown]
   'job:progress': [job: Job, payload: unknown, elapsed: number]
+  'job:complete': [job: Job, payload: unknown, elapsed: number]
+  'job:error': [error: Error, job: Job, payload: unknown]
+  'job:finish': [job: Job, payload: unknown, elapsed: number]
 }
 
 /**

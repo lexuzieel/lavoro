@@ -291,6 +291,8 @@ export abstract class QueueDriver<
 
     const startedAt = Date.now()
 
+    this.emit('job:start', jobInstance, payload)
+
     const onProgress = () => {
       this.emit('job:progress', jobInstance, payload, Date.now() - startedAt)
     }
@@ -302,6 +304,8 @@ export abstract class QueueDriver<
      */
     try {
       await jobInstance.handle(payload)
+
+      this.emit('job:complete', jobInstance, payload, Date.now() - startedAt)
 
       this.logger.trace(
         {
@@ -315,6 +319,7 @@ export abstract class QueueDriver<
     } catch (error) {
       this.emit('job:error', error, jobInstance, payload)
     } finally {
+      this.emit('job:finish', jobInstance, payload, Date.now() - startedAt)
       /**
        * Once the job is done with any status,
        * we must clear the interval.
