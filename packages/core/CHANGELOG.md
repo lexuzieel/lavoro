@@ -1,5 +1,11 @@
 # @lavoro/core
 
+## 0.4.1
+
+### Patch Changes
+
+- Update @lavoro/core constraint to match upstream version
+
 ## 0.4.0
 
 ### Minor Changes
