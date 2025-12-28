@@ -52,7 +52,7 @@ export class PendingSchedule {
      * Interval during which the lock is held for the job
      * and no other instances of it will not be scheduled
      */
-    ttl: '5m',
+    ttl: '15s',
     overlap: false,
     handOff: false,
   }
