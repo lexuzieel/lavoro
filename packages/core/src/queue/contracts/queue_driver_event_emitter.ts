@@ -1,6 +1,6 @@
 import { Job } from './job.js'
 
-import { EventEmitter } from 'stream'
+import { EventEmitter } from 'events'
 
 /**
  * Type-safe queue driver events.
