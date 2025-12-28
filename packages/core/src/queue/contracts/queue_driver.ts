@@ -1,9 +1,10 @@
 import { Logger, createDefaultLogger } from '../../logger.js'
 import { QueueConfig, QueueConnectionName, WorkerOptions } from '../types.js'
-import { Job, Payload, PayloadLock } from './job.js'
+import { Job, Payload } from './job.js'
 import { QueueDriverEventEmitter } from './queue_driver_event_emitter.js'
 
 import type { Lock, LockFactory } from '@verrou/core'
+import type { SerializedLock } from '@verrou/core/types'
 
 export type ProcessJobParams = {
   id: string
@@ -253,10 +254,8 @@ export abstract class QueueDriver<
      * This will prevent the job from being scheduled
      * while it is being processed.
      */
-    const jobLock = (payload as any)?._lock as PayloadLock | undefined
-
-    const ttl = jobLock?.ttl
-    const serializedLock = jobLock?.serializedLock
+    const serializedLock = (payload as any)?._lock as SerializedLock | undefined
+    const ttl = serializedLock?.ttl
 
     let lock: Lock | undefined
 
@@ -279,7 +278,7 @@ export abstract class QueueDriver<
             {
               job: name,
               id,
-              jobLock,
+              serializedLock,
             },
             'Restored lock from scheduler',
           )
@@ -293,7 +292,34 @@ export abstract class QueueDriver<
 
     this.emit('job:start', jobInstance, payload)
 
-    const onProgress = () => {
+    let isExtending = false
+
+    const onProgress = async () => {
+      if (lock && ttl && !isExtending) {
+        try {
+          const remainingTime = lock.getRemainingTime()
+
+          /**
+           * Extend lock if remaining time drops below half the TTL.
+           * This acts as a heartbeat to prevent the lock from expiring
+           * while the job is still running, without unnecessary extensions
+           * for short jobs.
+           */
+          if (remainingTime !== null && remainingTime <= ttl / 2) {
+            isExtending = true
+            this.logger.trace(
+              { job: name, id, remainingTime, ttl },
+              'Extending lock',
+            )
+            await lock.extend(ttl)
+          }
+        } catch (error) {
+          this.logger.warn({ job: name, id, error }, 'Failed to extend lock')
+        } finally {
+          isExtending = false
+        }
+      }
+
       this.emit('job:progress', jobInstance, payload, Date.now() - startedAt)
     }
 
