@@ -69,4 +69,26 @@ describe('QueueDriverEventEmitter', () => {
 
     await queue.stop()
   })
+
+  test('off() removes event listener', async () => {
+    const queue = createQueue()
+    await queue.start()
+
+    const listener = vi.fn()
+    queue.on('job:error', listener)
+
+    const driver = (queue as any).drivers.get('main') as TestQueueDriver
+    const job = new TestJob()
+    job.options.queue = 'default'
+
+    driver.emitError(new Error('first'), job, {})
+    expect(listener).toHaveBeenCalledTimes(1)
+
+    queue.off('job:error', listener)
+
+    driver.emitError(new Error('second'), job, {})
+    expect(listener).toHaveBeenCalledTimes(1)
+
+    await queue.stop()
+  })
 })

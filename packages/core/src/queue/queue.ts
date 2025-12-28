@@ -6,6 +6,7 @@ import {
   QueueDriverStopOptions,
   QueueName,
 } from './contracts/queue_driver.js'
+import { QueueDriverEvents } from './contracts/queue_driver_event_emitter.js'
 import { QueueEventEmitter } from './queue_event_emitter.js'
 import type {
   QueueConfig,
@@ -49,13 +50,20 @@ export class Queue extends QueueEventEmitter {
    * proxy them through the queue service.
    */
   private bindEvents(driver: QueueDriver) {
-    driver.on('error', (error) => {
-      this.emit('error', error)
-    })
+    const events = [
+      'error',
+      'job:start',
+      'job:progress',
+      'job:complete',
+      'job:error',
+      'job:finish',
+    ] as const
 
-    driver.on('job:error', (error, job, payload) => {
-      this.emit('job:error', error, job, payload)
-    })
+    for (const event of events) {
+      driver.on(event, (...args) => {
+        this.emit(event, ...(args as QueueDriverEvents[typeof event]))
+      })
+    }
   }
 
   private createDriver(

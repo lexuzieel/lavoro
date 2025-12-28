@@ -20,11 +20,6 @@ export const getDistributedLockKey = (name: string) => {
   return `lavoro:schedule:${hash}`
 }
 
-/**
- * Minimal initial lock TTL which helps avoid scheduler race conditions
- */
-const initialTTL: Duration = '5s'
-
 export class PendingSchedule {
   protected cronPattern?: string
 
@@ -57,17 +52,14 @@ export class PendingSchedule {
      * Interval during which the lock is held for the job
      * and no other instances of it will not be scheduled
      */
-    ttl: '5m',
+    ttl: '15s',
     overlap: false,
     handOff: false,
   }
 
   constructor(
     protected name: string,
-    protected cb: (lock?: {
-      ttl: number
-      serializedLock: SerializedLock
-    }) => MaybePromise<void>,
+    protected cb: (lock?: SerializedLock) => MaybePromise<void>,
     protected lockProviderResolver: () => LockFactory,
   ) {}
 
@@ -207,7 +199,10 @@ export class PendingSchedule {
 
         // Resolve lock provider instance and create the lock.
         const lockProvider = this.lockProviderResolver()
-        const lock = lockProvider.createLock(key, initialTTL)
+        const lock = lockProvider.createLock(
+          key,
+          this.distributedLockOptions.ttl,
+        )
 
         // If the lock is already locked, we skip the execution.
         // if (await lock.isLocked()) {
@@ -228,10 +223,7 @@ export class PendingSchedule {
           // Otherwise we just run the task and then release
           // the lock immediately.
           if (this.distributedLockOptions.handOff) {
-            await this.cb({
-              ttl: this.distributedLockOptions.ttl as number,
-              serializedLock: lock.serialize(),
-            })
+            await this.cb(lock.serialize())
           } else {
             await this.cb()
             await lock.forceRelease()

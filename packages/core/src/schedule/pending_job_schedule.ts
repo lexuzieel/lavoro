@@ -36,10 +36,7 @@ export class PendingJobSchedule<
   ) {
     super(
       job.name,
-      async (lock?: { ttl: number; serializedLock: SerializedLock }) => {
-        /**
-         * Pass job ttl and serialized lock to the payload.
-         */
+      async (lock?: SerializedLock) => {
         if (lock) {
           this.payload._lock = lock
         }

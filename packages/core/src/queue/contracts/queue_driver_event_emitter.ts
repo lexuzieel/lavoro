@@ -7,7 +7,11 @@ import { EventEmitter } from 'stream'
  */
 export interface QueueDriverEvents {
   error: [error: Error]
+  'job:start': [job: Job, payload: unknown]
+  'job:progress': [job: Job, payload: unknown, elapsed: number]
+  'job:complete': [job: Job, payload: unknown, elapsed: number]
   'job:error': [error: Error, job: Job, payload: unknown]
+  'job:finish': [job: Job, payload: unknown, elapsed: number]
 }
 
 /**
@@ -19,6 +23,13 @@ export abstract class QueueDriverEventEmitter extends EventEmitter {
     listener: (...args: QueueDriverEvents[K]) => void,
   ): this {
     return super.on(event, listener)
+  }
+
+  public override off<K extends keyof QueueDriverEvents>(
+    event: K,
+    listener: (...args: QueueDriverEvents[K]) => void,
+  ): this {
+    return super.off(event, listener)
   }
 
   public override emit<K extends keyof QueueDriverEvents>(
