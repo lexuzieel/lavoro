@@ -289,6 +289,14 @@ export abstract class QueueDriver<
       }
     }
 
+    const startedAt = Date.now()
+
+    const onProgress = () => {
+      this.emit('job:progress', jobInstance, payload, Date.now() - startedAt)
+    }
+
+    const intervalId = setInterval(onProgress, 1000)
+
     /**
      * Next, we process the actual job.
      */
@@ -307,6 +315,12 @@ export abstract class QueueDriver<
     } catch (error) {
       this.emit('job:error', error, jobInstance, payload)
     } finally {
+      /**
+       * Once the job is done with any status,
+       * we must clear the interval.
+       */
+      clearInterval(intervalId)
+
       /**
        * If we previously acquired a lock for
        * this job, we need to release it here.

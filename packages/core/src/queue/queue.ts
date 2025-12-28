@@ -56,6 +56,10 @@ export class Queue extends QueueEventEmitter {
     driver.on('job:error', (error, job, payload) => {
       this.emit('job:error', error, job, payload)
     })
+
+    driver.on('job:progress', (job, payload, elapsed) => {
+      this.emit('job:progress', job, payload, elapsed)
+    })
   }
 
   private createDriver(

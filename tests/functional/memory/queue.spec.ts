@@ -5,8 +5,14 @@ import {
 } from '../../helpers/mutex.js'
 import { TestContext, logger } from '../../helpers/test_context.js'
 
-import { Job } from '@lavoro/core'
+import { Job, QueueDriverEvents } from '@lavoro/core'
 import { describe, expect, test } from 'vitest'
+
+type ProgressEvent = {
+  job: QueueDriverEvents['job:progress'][0]
+  payload: QueueDriverEvents['job:progress'][1]
+  elapsed: QueueDriverEvents['job:progress'][2]
+}
 
 let jobRuns = 0
 let slowJobCompleted = false
@@ -22,12 +28,15 @@ class TestJob extends Job {
 }
 
 class SlowJob extends Job {
-  public async handle(payload: { duration: number }): Promise<void> {
+  public async handle(payload: {
+    duration: number
+    mutex?: string
+  }): Promise<void> {
     logger.info({ payload }, 'Starting slow job...')
     await new Promise((resolve) => setTimeout(resolve, payload.duration))
     slowJobCompleted = true
     logger.info({ payload }, 'Slow job completed')
-    releaseMutex('slow-job')
+    releaseMutex(payload.mutex ?? 'slow-job')
   }
 }
 
@@ -159,6 +168,56 @@ describe(
       await JobWithError.dispatch({ error: 'error thrown inside the job' })
 
       expect(error?.message).toBe('error thrown inside the job')
+    })
+
+    test('should emit progress events for each job separately', async () => {
+      const queue = ctx.getQueue()
+      const progressByJob = new Map<string, ProgressEvent[]>()
+
+      queue.on('job:progress', (job, payload, elapsed) => {
+        const events = progressByJob.get(job.id) || []
+        events.push({ job, payload, elapsed })
+        progressByJob.set(job.id, events)
+      })
+
+      acquireMutex('slow-job-1')
+      acquireMutex('slow-job-2')
+
+      // Dispatch two jobs concurrently (custom-queue has concurrency: 2)
+      await Promise.all([
+        SlowJob.dispatch({ duration: 2500, mutex: 'slow-job-1' }).onQueue(
+          'custom-queue',
+        ),
+        SlowJob.dispatch({ duration: 2500, mutex: 'slow-job-2' }).onQueue(
+          'custom-queue',
+        ),
+      ])
+
+      await Promise.all([
+        waitForMutex('slow-job-1'),
+        waitForMutex('slow-job-2'),
+      ])
+
+      // Each job should have its own progress events
+      expect(progressByJob.size).toBe(2)
+
+      for (const events of progressByJob.values()) {
+        expect(events.length).toBeGreaterThanOrEqual(2)
+      }
+
+      // Verify progress events stop after job completion
+      const eventCountAfterCompletion = new Map(
+        Array.from(progressByJob.entries()).map(([id, events]) => [
+          id,
+          events.length,
+        ]),
+      )
+
+      await new Promise((resolve) => setTimeout(resolve, 2000))
+
+      for (const [jobId, events] of progressByJob) {
+        expect(events.length).toBe(eventCountAfterCompletion.get(jobId))
+      }
     })
 
     test('should throw when trying to enqueue for non-existent worker', async () => {
