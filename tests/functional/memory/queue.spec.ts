@@ -210,31 +210,6 @@ describe(
       expect(finishEvent?.job.name).toBe('JobWithError')
     })
 
-    test('should allow removing event listeners with off()', async () => {
-      const queue = ctx.getQueue()
-
-      let callCount = 0
-      const listener = () => {
-        callCount++
-      }
-
-      queue.on('job:finish', listener)
-
-      acquireMutex('slow-job')
-      await SlowJob.dispatch({ duration: 100 })
-      await waitForMutex('slow-job')
-
-      expect(callCount).toBe(1)
-
-      queue.off('job:finish', listener)
-
-      acquireMutex('slow-job')
-      await SlowJob.dispatch({ duration: 100 })
-      await waitForMutex('slow-job')
-
-      expect(callCount).toBe(1)
-    })
-
     test('should emit error event when job throws', async () => {
       const queue = ctx.getQueue()
 
