@@ -1,6 +1,6 @@
 {
   "name": "@lavoro/memory",
-  "version": "0.4.1",
+  "version": "0.4.2",
   "type": "module",
   "description": "In-memory queue driver for Lavoro",
   "author": "Aleksei Ivanov <contact@aleksei.dev>",
@@ -43,7 +43,7 @@
     "watch": "tsup-node --watch"
   },
   "dependencies": {
-    "@lavoro/core": "^0.4.1",
+    "@lavoro/core": "^0.4.2",
     "@verrou/core": "^0.5.2"
   },
   "peerDependencies": {

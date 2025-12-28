@@ -1,6 +1,6 @@
 {
   "name": "@lavoro/core",
-  "version": "0.4.1",
+  "version": "0.4.2",
   "type": "module",
   "description": "A type-safe, flexible queue library for Node.js with support for multiple drivers",
   "author": "Aleksei Ivanov <contact@aleksei.dev>",
