@@ -6,13 +6,15 @@ export default defineConfig({
   // description: 'Easy background job scheduling with fluent API for Node.js',
   // title: 'Lavoro - Easy Background Job Scheduling for Node.js',
   description: 'Easy background job scheduling with fluent API for Node.js',
-  title: 'Lavoro',
+  titleTemplate:
+    ':title - Lavoro - Easy Background Task Scheduling for Node.js',
   themeConfig: {
     // https://vitepress.dev/reference/default-theme-config
     logo: {
       dark: '/lavoro-plain-dark.svg',
       light: '/lavoro-plain-light.svg',
     },
+    siteTitle: 'Lavoro',
     nav: [
       { text: 'Home', link: '/' },
       {
@@ -24,7 +26,7 @@ export default defineConfig({
         items: [
           { text: 'PostgreSQL', link: '/markdown-examples' },
           { text: 'Memory', link: '/markdown-examples' },
-          { text: 'Redis', link: '/markdown-examples' },
+          // { text: 'Redis', link: '/markdown-examples' },
         ],
       },
     ],

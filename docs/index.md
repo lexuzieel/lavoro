@@ -2,6 +2,9 @@
 # https://vitepress.dev/reference/default-theme-home-page
 layout: home
 
+title: 'Lavoro - Easy Background Job Scheduling for Node.js'
+titleTemplate: ':title'
+
 hero:
   name: Lavoro
   text: Easy Background Task Scheduling for Node.js
@@ -12,23 +15,67 @@ hero:
   actions:
     - theme: brand
       text: Quick Start
-      link: /markdown-examples
+      link: /quick-start
     - theme: alt
       text: Documentation
-      link: /api-examples
+      link: /quick-start
 
 features:
   - icon: ✨
     title: Fluent API
     details:
-      Inspired by Laravel, Lavoro brings TypeScript-first API that is a joy to
-      use
-  - icon: 🔍
-    title: Type-Safe
-    details: Type-safe queue names and payloads
-  - icon: 📦
-    title: Multiple Drivers (coming soon)
+      Inspired by <a href="https://laravel.com/docs/12.x/queues">Laravel
+      queues</a>, Lavoro brings TypeScript-first API that is a joy to use
+  - icon: ⚡
+    title: Distributed by Design
     details:
-      Use your existing PostgreSQL database or bring in Redis for the
-      high-throughput use cases.
+      Scale by launching more instances without complex scheduling coordination
+      logic
+  - icon: 📦
+    title: Multiple Drivers
+    details:
+      Use your existing PostgreSQL database or store jobs in memory during
+      development
+      # Use your existing PostgreSQL database or bring in Redis for the high-throughput use cases
 ---
+
+## Ever wanted to ...
+
+1. Just specify job logic with a type-safe payload:
+
+```ts
+import { Job } from '@lavoro/core'
+
+export class Inspire extends Job {
+  async handle(payload: { quote: string }): Promise<void> {
+    logger.info(payload.quote)
+  }
+}
+```
+
+2. Start the queue:
+
+```ts
+const queue = new Queue(queueConfig)
+Job.setDefaultQueueServiceResolver(() => queue)
+
+await queue.start()
+```
+
+3. And simply use it:
+
+```ts
+await Schedule.job(Inspire, { quote }).every('five seconds')
+```
+
+... without running a separate worker and manually coordinating job scheduling?
+
+**Well, now you can!**
+
+First, install the queue drivers:
+
+```bash
+npm install @lavoro/memory @lavoro/postgres
+```
+
+Then, follow an easy [quick start guide](/quick-start) to get started.

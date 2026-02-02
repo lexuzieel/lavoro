@@ -92,26 +92,20 @@
 
 :root {
   --vp-home-hero-name-color: transparent;
-  --vp-home-hero-name-background: -webkit-linear-gradient(
-    120deg,
-    var(--vp-c-brand-soft) 0%,
-    var(--vp-c-brand-1) 40%
-  );
+  --vp-home-hero-name-background: -webkit-linear-gradient(120deg,
+      var(--vp-c-brand-soft) 0%,
+      var(--vp-c-brand-1) 40%);
 
-  --vp-home-hero-image-background-image: linear-gradient(
-    -15deg,
-    rgb(28, 219, 126) 20%,
-    transparent 40%
-  );
+  --vp-home-hero-image-background-image: linear-gradient(-15deg,
+      rgb(28, 219, 126) 20%,
+      transparent 40%);
   --vp-home-hero-image-filter: blur(44px);
 }
 
 .dark {
-  --vp-home-hero-image-background-image: linear-gradient(
-    -15deg,
-    rgb(118, 236, 179) 20%,
-    transparent 40%
-  );
+  --vp-home-hero-image-background-image: linear-gradient(-15deg,
+      rgb(118, 236, 179) 20%,
+      transparent 40%);
 }
 
 /* .dark {
@@ -151,4 +145,12 @@
 
 .DocSearch {
   --docsearch-primary-color: var(--vp-c-brand-1) !important;
+}
+
+.VPHomeFeatures .VPFeature .details a {
+  color: var(--vp-c-brand-1);
+}
+
+.VPHomeFeatures .VPFeature .details a:hover {
+  text-decoration: underline;
 }
