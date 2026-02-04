@@ -33,10 +33,38 @@ export default defineConfig({
 
     sidebar: [
       {
-        text: 'Examples',
+        text: 'Guides',
         items: [
-          { text: 'Markdown Examples', link: '/markdown-examples' },
-          { text: 'Runtime API Examples', link: '/api-examples' },
+          { text: 'Introduction', link: '/introduction' },
+          { text: 'Quick Start', link: '/quick-start' },
+          { text: 'Configuration', link: '/configuration' },
+          {
+            text: 'Drivers',
+            base: '/drivers',
+            link: '/',
+            items: [
+              { text: 'Memory', link: '/memory' },
+              { text: 'PostgreSQL', link: '/postgresql' },
+            ],
+          },
+          { text: 'Creating a Queue', link: '/queue' },
+          { text: 'Creating Jobs', link: '/jobs' },
+          { text: 'Frequently Asked Questions', link: '/faq' },
+          { text: 'Roadmap', link: '/roadmap' },
+        ],
+      },
+      {
+        text: 'Digging Deeper',
+        items: [
+          { text: 'Distributed Locking', link: '/distributed-locking' },
+          { text: 'Logging', link: '/logging' },
+          { text: 'Events', link: '/events' },
+        ],
+      },
+      {
+        text: 'Integrations',
+        items: [
+          { text: 'AdonisJS', link: '/integration-with-adonisjs' }, //
         ],
       },
     ],
