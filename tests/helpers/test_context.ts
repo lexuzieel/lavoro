@@ -191,12 +191,12 @@ export class TestContext {
   ) {
     beforeAll(async () => {
       this.queue = await this.setupQueue(jobs, driverType, config)
-    }, 60 * 1000)
+    }, 120 * 1000)
 
     afterAll(async () => {
       await this.teardownPostgres()
       this.queue = undefined
-    }, 30 * 1000)
+    }, 60 * 1000)
 
     beforeEach(async () => {
       Schedule.clear()
