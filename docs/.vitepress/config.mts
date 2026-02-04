@@ -78,4 +78,8 @@ export default defineConfig({
       copyright: 'Copyright © 2025-present Aleksei Ivanov',
     },
   },
+
+  sitemap: {
+    hostname: 'http://lavoro-docs.netlify.app',
+  },
 })
