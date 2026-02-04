@@ -18,7 +18,7 @@ hero:
       link: /quick-start
     - theme: alt
       text: Documentation
-      link: /quick-start
+      link: /introduction
 
 features:
   - icon: ✨
