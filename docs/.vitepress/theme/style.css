@@ -154,3 +154,41 @@
 .VPHomeFeatures .VPFeature .details a:hover {
   text-decoration: underline;
 }
+
+/*
+ * Mermaid styles
+ */
+
+/* Source: https://stephenkernan.com/blog/how-to-style-mermaid-edge-labels */
+/* 1. Target the foreignObject (the parent) */
+foreignObject {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  /* 2. All items have a foreignObject */
+  /* We only care about edgeLabels */
+  &:has(.edgeLabel) {
+    background-color: transparent;
+
+    /* 3. Make the label transparent because, by default, */
+    /* it has a translucent background color */
+    .edgeLabel,
+    .labelBkg {
+      background-color: transparent !important;
+    }
+
+    .labelBkg {
+      margin-top: -2px;
+    }
+
+    /* 4. Now, changes to the paragraph */
+    /* directly impact what you see */
+    p {
+      margin-inline: auto !important;
+      max-width: max-content;
+      /* border-radius: 8px; */
+      padding: 0 0.75rem;
+    }
+  }
+}
