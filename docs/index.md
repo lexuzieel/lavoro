@@ -41,7 +41,7 @@ features:
 
 ## Ever wanted to ...
 
-1. Just specify job logic with a type-safe payload:
+1. Just specify the job with a type-safe payload:
 
 ```ts
 import { Job } from '@lavoro/core'
@@ -53,7 +53,7 @@ export class Inspire extends Job {
 }
 ```
 
-2. Initialize Lavoro:
+2. Start background job processing:
 
 ```ts
 const queue = new Queue(queueConfig)
@@ -78,7 +78,7 @@ scheduling?
 First, install the queue drivers:
 
 ```bash
-npm install @lavoro/memory @lavoro/postgres
+npm install @lavoro/postgres
 ```
 
 Then, follow an easy [quick start guide](/quick-start) to get started.
