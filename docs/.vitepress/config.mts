@@ -105,6 +105,14 @@ export default withMermaid(
           content: 'mvsku5PfP6XggNM2FAFwjwl9l1BI6Ra0rcxI7k-CqLQ',
         },
       ],
+      [
+        'script',
+        {
+          async: '',
+          src: 'https://gc.zgo.at/count.js',
+          'data-goatcounter': 'https://lavoro.goatcounter.com/count',
+        },
+      ],
     ],
 
     sitemap: {
