@@ -53,7 +53,7 @@ export class Inspire extends Job {
 }
 ```
 
-2. Start the queue:
+2. Initialize Lavoro:
 
 ```ts
 const queue = new Queue(queueConfig)
@@ -65,12 +65,15 @@ await queue.start()
 3. And simply use it:
 
 ```ts
-await Schedule.job(Inspire, { quote }).every('five seconds')
+await Schedule.job(Inspire, {
+  quote: 'Done is better than perfect',
+}).every('five seconds')
 ```
 
-... without running a separate worker and manually coordinating job scheduling?
+... without running a separate worker process and manually coordinating job
+scheduling?
 
-**Well, now you can!**
+**Lavoro makes this a breeze.**
 
 First, install the queue drivers:
 
@@ -79,3 +82,7 @@ npm install @lavoro/memory @lavoro/postgres
 ```
 
 Then, follow an easy [quick start guide](/quick-start) to get started.
+
+Or if you're curious about the design philosophy behind Lavoro and how it is
+different, check out the [motivation](/introduction#motivation) section of the
+introduction.
