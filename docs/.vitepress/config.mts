@@ -98,6 +98,13 @@ export default withMermaid(
           href: '/favicon.ico',
         },
       ],
+      [
+        'meta',
+        {
+          name: 'google-site-verification',
+          content: 'mvsku5PfP6XggNM2FAFwjwl9l1BI6Ra0rcxI7k-CqLQ',
+        },
+      ],
     ],
 
     sitemap: {
