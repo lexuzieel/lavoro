@@ -116,7 +116,7 @@ export default withMermaid(
     ],
 
     sitemap: {
-      hostname: 'https://lavoro-docs.netlify.app',
+      hostname: 'https://lavoro.js.org',
     },
   }),
 )
