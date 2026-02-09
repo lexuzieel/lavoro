@@ -1,6 +1,6 @@
 {
   "name": "@lavoro/postgres",
-  "version": "0.4.4",
+  "version": "0.4.5",
   "type": "module",
   "description": "PostgreSQL queue driver for Lavoro with support for distributed locking",
   "author": "Aleksei Ivanov <contact@aleksei.dev>",
@@ -44,7 +44,7 @@
     "watch": "tsup-node --watch"
   },
   "dependencies": {
-    "@lavoro/core": "^0.4.4",
+    "@lavoro/core": "^0.4.5",
     "@verrou/core": "^0.5.2"
   },
   "peerDependencies": {
