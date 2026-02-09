@@ -339,11 +339,79 @@ describe('PendingSchedule', () => {
     })
 
     test('.at() works for daily intervals or larger', () => {
-      expect(() =>
-        new PendingSchedule('test', () => Promise.resolve(), null as any)
-          .every('day')
-          .at('12:00'),
-      ).not.toThrow()
+      const intervals = [
+        'day',
+        'week',
+        'sunday',
+        'monday',
+        'tuesday',
+        'wednesday',
+        'thursday',
+        'friday',
+        'saturday',
+        'month',
+        'last day of month',
+      ] as const
+
+      for (const interval of intervals) {
+        expect(() =>
+          new PendingSchedule('test', () => Promise.resolve(), null as any)
+            .every(interval)
+            .at('12:00'),
+        ).not.toThrow()
+      }
+    })
+
+    test('.at() sets the correct hour and minute', () => {
+      // day at 14:30
+      check(
+        '2025-01-01T14:30:00Z',
+        (pending) => pending.every('day').at('14:30'),
+        { testOptions: { currentDate: '2025-01-01T00:00:00Z' } },
+      )
+
+      // monday at 09:15
+      check(
+        '2025-01-06T09:15:00Z',
+        (pending) => pending.every('monday').at('09:15'),
+      )
+
+      // week (sunday) at 18:00
+      check(
+        '2025-01-05T18:00:00Z',
+        (pending) => pending.every('week').at('18:00'),
+      )
+
+      // week.on(friday) at 08:30
+      check(
+        '2025-01-03T08:30:00Z',
+        (pending) => pending.every('week').on('friday').at('08:30'),
+      )
+
+      // month at 06:00 — current date is 2025-01-01T00:00:00Z,
+      // so 06:00 on the 1st is still ahead, next run is today
+      check(
+        '2025-01-01T06:00:00Z',
+        (pending) => pending.every('month').at('06:00'),
+      )
+
+      // month.on(tuesday) at 10:45
+      check(
+        '2025-01-07T10:45:00Z',
+        (pending) => pending.every('month').on('tuesday').at('10:45'),
+      )
+    })
+
+    test('.at() throws for multi-hour intervals', () => {
+      const pending = new PendingSchedule(
+        'test',
+        () => Promise.resolve(),
+        null as any,
+      )
+
+      expect(() => pending.every('two hours').at('12:00')).toThrow()
+      expect(() => pending.every('six hours').at('12:00')).toThrow()
+      expect(() => pending.every('twelve hours').at('12:00')).toThrow()
     })
 
     test('.on() throws for small intervals', () => {
