@@ -283,7 +283,7 @@ export abstract class QueueDriver<
             'Restored lock from scheduler',
           )
         } catch (error) {
-          this.logger.warn({ job: name, id, error }, 'Failed to restore lock')
+          this.logger.debug({ job: name, id, error }, 'Failed to restore lock')
         }
       }
     }
@@ -314,7 +314,7 @@ export abstract class QueueDriver<
             await lock.extend(ttl)
           }
         } catch (error) {
-          this.logger.warn({ job: name, id, error }, 'Failed to extend lock')
+          this.logger.debug({ job: name, id, error }, 'Failed to extend lock')
         } finally {
           isExtending = false
         }
@@ -365,7 +365,7 @@ export abstract class QueueDriver<
             'Released lock for scheduled job',
           )
         } catch (error) {
-          this.logger.warn({ job: name, id, error }, 'Failed to release lock')
+          this.logger.debug({ job: name, id, error }, 'Failed to release lock')
         }
       }
     }
