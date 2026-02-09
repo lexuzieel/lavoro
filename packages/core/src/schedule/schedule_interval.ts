@@ -54,8 +54,8 @@ export type ScheduleIntervalDayOfWeek =
 
 type Hour =
   | `${0 | 1}${0 | 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9}`
-  | `${2}${0 | 1 | 2 | 3 | 4}`
-type Minute = `${0 | 1 | 2 | 3 | 4 | 5}${0 | 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9}`
+  | `${2}${0 | 1 | 2 | 3}`
+type Minute = `${0 | 1 | 2 | 3 | 4 | 5}${0 | 5}`
 
 export type ScheduleIntervalTime = `${Hour}:${Minute}`
 
