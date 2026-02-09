@@ -21,12 +21,12 @@ hero:
       link: /introduction
 
 features:
-  - icon: ✨
+  - icon: ⚡
     title: Fluent API
     details:
       Inspired by <a href="https://laravel.com/docs/12.x/queues">Laravel
-      queues</a>, Lavoro brings TypeScript-first API that is a joy to use
-  - icon: ⚡
+      queues</a>, Lavoro uses a TypeScript-first API that is a joy to use
+  - icon: ✨
     title: Distributed by Design
     details:
       Scale by launching more instances without complex scheduling coordination
