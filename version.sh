@@ -40,4 +40,4 @@ echo "Bumping versions..."
 npx changeset version
 
 echo ""
-echo "✅ Versions bumped! Review the changes and run ./release.sh to publish"
+echo "✅ Versions bumped! Review the changes and run ./publish.sh to publish"
