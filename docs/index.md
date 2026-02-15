@@ -81,7 +81,7 @@ First, install the queue drivers:
 npm install @lavoro/postgres
 ```
 
-Then, follow an easy [quick start guide](/quick-start) to get started.
+Then, follow a comprehensive [guide to get started](/getting-started).
 
 Or if you're curious about the design philosophy behind Lavoro and how it is
 different, check out the [motivation](/introduction#motivation) section of the
