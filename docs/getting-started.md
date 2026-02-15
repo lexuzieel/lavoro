@@ -1,4 +1,4 @@
-# Quick Start
+# Get Started
 
 It is simple to start using Lavoro: you install the package for the driver you
 want to use, then you create and start a Lavoro instance with a configuration.
