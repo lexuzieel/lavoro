@@ -5,8 +5,7 @@ want to use, then you create and start a Lavoro instance with a configuration.
 
 ## Installation
 
-Each driver comes as its own self-contained package with minimal amount of
-dependencies. Each driver has its own package:
+Each driver is a separate package. Install the one you need:
 
 ### PostgreSQL
 
@@ -31,9 +30,8 @@ instance if you don't need persistence.
 ## Creating the queue
 
 Unlike other libraries, in Lavoro you don't have to create and manage queues
-separately. Instead, you create an instance of Lavoro, bind jobs to it and
-simply start it. Depending on the configuration, it will automatically figure
-out which workers to run for which queues.
+separately. Instead, you create one Lavoro instance, bind jobs to it, and
+start it. Lavoro handles queue management automatically based on your config.
 
 ::: tip
 
@@ -85,8 +83,9 @@ const config = {
 const lavoroConfig = defineConfig(config)
 
 /*
- * These type definitions enable TypeScript type checking
- * for the connection and queue names.
+ * Don't worry about this part — it just enables
+ * TypeScript autocomplete for queue/connection names.
+ * Copy-paste as-is and forget about it.
  */
 declare module '@lavoro/core' {
   interface QueueList extends InferQueueNames<typeof config> {}
@@ -122,8 +121,8 @@ export const logger = new Logger(pino())
 const lavoro = new Queue({ ...lavoroConfig, logger })
 
 /*
- * Finally, we explicitly set this instance
- * as the default for job dispatching.
+ * This tells all jobs to use this Lavoro instance by default
+ * when you call Job.dispatch() anywhere in your app.
  */
 Job.setDefaultQueueServiceResolver(async () => lavoro)
 ```
@@ -150,8 +149,8 @@ const main = async () => {
 
 await main()
 
-// Keep the process alive so the task
-// worker will listen for the jobs.
+// Keep process alive indefinitely
+// (in real apps, your HTTP server or framework does this)
 setInterval(() => {}, 1 << 30)
 ```
 

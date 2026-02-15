@@ -38,7 +38,7 @@ export default withMermaid(
           text: 'Guides',
           items: [
             { text: 'Introduction', link: '/introduction' },
-            { text: 'Quick Start', link: '/quick-start' },
+            { text: 'Get Started', link: '/getting-started' },
             { text: 'Configuration', link: '/configuration' },
             {
               text: 'Drivers',
