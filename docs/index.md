@@ -14,8 +14,8 @@ hero:
     alt: Lavoro is a background job queue and scheduler for Node.js
   actions:
     - theme: brand
-      text: Quick Start
-      link: /quick-start
+      text: Get Started
+      link: /getting-started
     - theme: alt
       text: Documentation
       link: /introduction
